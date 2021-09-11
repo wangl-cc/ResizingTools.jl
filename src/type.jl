@@ -25,7 +25,7 @@ Base.getindex(A::AbstractRDArray, i::Int) = parent(A)[i]
 Base.setindex!(A::AbstractRDArray, v, i::Int) = parent(A)[i] = v
 Base.unsafe_convert(::Type{Ptr{T}}, A::AbstractRDArray{T}) where {T} =
     Base.unsafe_convert(Ptr{T}, parent(A))
-Base.elsize(::Type{<:AbstractRDArray{T}}) where {T} = sizeof(T)
+Base.elsize(::Type{T}) where {T<:AbstractRDArray} = Base.elsize(parent_type(T))
 
 """
     SimpleRDArray{T,N} <: AbstractRDArray{T,N}

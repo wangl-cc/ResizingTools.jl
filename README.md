@@ -1,5 +1,9 @@
 # ResizingTools.jl
 
+[![Build Status](https://github.com/wangl-cc/ResizingTools.jl/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/wangl-cc/ResizingTools.jl/actions/workflows/ci.yml)
+[![codecov](https://codecov.io/gh/wangl-cc/ResizingTools.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/wangl-cc/ResizingTools.jl)
+[![GitHub](https://img.shields.io/github/license/wangl-cc/ResizingTools.jl)](https://github.com/wangl-cc/ResizingTools.jl/blob/master/LICENSE)
+
 `ResizingTools` helps you create a `Array` type, which can be resized at each dimension.
 
 ## Quick start with the pre-defined `SimpleRDArray`
@@ -127,4 +131,4 @@ Then your type `RDArray` will works like a dense array but resizable.
 
 ### Other arrays
 
-If your array is a normal array instead of dense array, you should defined all methods below and [required methods for `AbstractArray`](https://docs.julialang.org/en/v1/manual/interfaces/#man-interface-array).
+If your array is a normal array instead of dense array, you should defined all methods above and [required methods for `AbstractArray`](https://docs.julialang.org/en/v1/manual/interfaces/#man-interface-array).

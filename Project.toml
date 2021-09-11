@@ -1,0 +1,17 @@
+name = "ResizingTools"
+uuid = "112dcb92-135b-4fff-bdeb-bacebdb79ec0"
+authors = ["Long Wang <wangl.cc@outlook.com>"]
+version = "0.0.1"
+
+[deps]
+ArrayInterface = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
+
+[compat]
+ArrayInterface = "3.1"
+julia = "1.0"
+
+[extras]
+Test = "8dfed614-e22c-5e08-85e1-65c5234f0b40"
+
+[targets]
+test = ["Test"]

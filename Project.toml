@@ -7,7 +7,6 @@ version = "0.0.1"
 ArrayInterface = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"
 
 [compat]
-ArrayInterface = "3.1"
 julia = "1.0"
 
 [extras]

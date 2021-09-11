@@ -14,7 +14,7 @@
 
 You can create a `SimpleRDArray` simply:
 ```julia
-julia> M = rand(3, 3) # create a 
+julia> M = rand(3, 3)
 3×3 Matrix{Float64}:
  0.00508115  0.139107  0.049149
  0.550149    0.962163  0.27269
@@ -116,6 +116,7 @@ If you want to defined your own array type, the only need to defined some method
 If your array is a dense array, declare it as a subtype of `AbstractRDArray` is a convenient way, where some important methods of `AbstractRDArray` are pre-defined.
 
 For a subtype of `AbstractRDArray` like `RDArray`, the interfaces is:
+
 | Required methods                                                     | Brief description                         |
 | :------------------------------------------------------------------- | :---------------------------------------- |
 | `Base.parent(A::RDArray)`                                            | Returns a dense array containing the data |
@@ -127,7 +128,8 @@ For a subtype of `AbstractRDArray` like `RDArray`, the interfaces is:
 | :--------------------------------------------------- | :---------------------------------------- | :---------------------------------------- |
 | `ResizingTools.getsize(A::RDArray, i::Int)`          | `getsize(A)[i]`                           | Returns the `i`th dimension of `A`        |
 | `ResizingTools.setsize!(A::RDArray, d::Int, i::Int)` | `setsize!(A, setindex(getsize(A), d, i))` | Mutates `i`th dimension of `A` into `dim` |
-Then your type `RDArray` will works like a dense array but resizable.
+
+Then your type `RDArray` will works like a dense array and resizable.
 
 ### Other arrays
 

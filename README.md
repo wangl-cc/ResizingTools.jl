@@ -64,7 +64,7 @@ BenchmarkTools.Trial: 10000 samples with 978 evaluations.
 ### Resize Array
 
 ```julia
-julia> resize!(RM, 4, 4)
+julia> resize!(RM, (4, 4))
 4×4 SimpleRDArray{Float64, 2}:
  0.00508115  0.139107  0.049149  1.17347
  0.550149    0.962163  0.27269   0.947301
@@ -78,7 +78,7 @@ true
 ### Performance of `resize!`
 
 ```julia
-julia> @benchmark resize!(A, 3, 4, 3) setup=(A=SimpleRDArray(ones(3, 3, 3))) evals=1
+julia> @benchmark resize!(A, (3, 4, 3)) setup=(A=SimpleRDArray(ones(3, 3, 3))) evals=1
 BenchmarkTools.Trial: 10000 samples with 1 evaluation.
  Range (min … max):  414.000 ns … 26.448 μs  ┊ GC (min … max): 0.00% … 0.00%
  Time  (median):     600.500 ns              ┊ GC (median):    0.00%
@@ -94,7 +94,7 @@ BenchmarkTools.Trial: 10000 samples with 1 evaluation.
 If some dimensions will not change, replace those dimension by `:` may helpful.
 
 ```julia
-julia> @benchmark resize!(A, :, 4, :) setup=(A=SimpleRDArray(ones(3, 3, 3))) evals=1
+julia> @benchmark resize!(A, (:, 4, :)) setup=(A=SimpleRDArray(ones(3, 3, 3))) evals=1
 BenchmarkTools.Trial: 10000 samples with 1 evaluation.
  Range (min … max):  227.000 ns … 23.268 μs  ┊ GC (min … max): 0.00% … 0.00%
  Time  (median):     257.000 ns              ┊ GC (median):    0.00%

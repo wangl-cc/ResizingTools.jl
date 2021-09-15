@@ -43,7 +43,7 @@ _sizehint!(A::AbstractArray{T,N}, sz::Vararg{Int,N}) where {T,N} =
 _sizehint!(A::AbstractArray, n::Int) = (sizehint!(parent(A), n); A)
 
 # Base.resize!(A, sz)
-function Base.resize!(A::AbstractArray{T,N}, sz::NTuple{N,Dim}) where {T,N}
+function Base.resize!(A::AbstractArray{T,N}, sz::NTuple{N,Any}) where {T,N}
     if Bool(has_parent(A))
         return _resize!(A, _todims(sz)...) # without A to preserve Colon
     end
@@ -98,9 +98,9 @@ function _resize!(A::AbstractArray{T,N}, nsz::Vararg{Dim,N}) where {T,N}
         setsize!(A, nsz)
         return A
     end
-    M = _getM(nsz...)
+    M = restdim(Colon, nsz...)
     # if only last dim changed
-    if M == 1 && nsz[N] isa Int
+    if M == 1
         nsz[N] > 0 || error("dimension(s) must be > 0")
         nlen = stride(A, N) * nsz[N]
         resize!(parent(A), nlen)
@@ -109,8 +109,8 @@ function _resize!(A::AbstractArray{T,N}, nsz::Vararg{Dim,N}) where {T,N}
     end
     nsz_int = _todims(A, nsz)
     checksize(A, nsz_int)
-    sz_tail = tailn(size(A), Val(N - M))
-    nsz_tail = tailn(nsz_int, Val(N - M))
+    sz_tail = tailn(Val(M), size(A)...)
+    nsz_tail = tailn(Val(M), nsz_int...)
     nlen = prod(nsz_int)
     cpy = similar(A, nlen)
     blocklen = stride(A, N - M + 1)
@@ -150,16 +150,33 @@ function _resize!(A::AbstractArray{T,N}, nsz::Vararg{Dim,N}) where {T,N}
     return A
 end
 _resize!(A::AbstractArray{T,N}, ::Vararg{Colon,N}) where {T,N} = A
+# _resize! with inds
+function _resize!(A::AbstractArray{T,N}, inds::Vararg{Any,N}) where {T,N}
+    @boundscheck checkbounds(A, inds...)
+    nsz = _todims(A, inds)
+    # resize parent if parent is not Resizable
+    parent_type(A) <: Resizable || begin
+        resize!(parent(A), inds)
+        setsize!(A, nsz)
+        return A
+    end
+    nlen = prod(nsz)
+    copyto!(parent(A), A[inds...])
+    resize!(parent(A), nlen)
+    setsize!(A, nsz)
+    return A
+end
+
 # Base.resize!(A, d, i)
 function Base.resize!(A::AbstractArray, d, i::Integer)
     if Bool(has_parent(A))
-        return _resize_dim!(A, Int(d), Int(i))
+        return _resizedim!(A, _todim(d), Int(i))
     end
     return throw_methoderror(resize!, A)
 end
-function _resize_dim!(A::AbstractArray, d::Int, i::Int)
+function _resizedim!(A::AbstractArray, d::Int, i::Int)
     N = ndims(A)
-    d == size(A)[i] && return A
+    d == size(A, i) && return A
     if i == N
         resize!(parent(A), stride(A, N) * d)
         setsize!(A, d, i)
@@ -182,49 +199,88 @@ function _resize_dim!(A::AbstractArray, d::Int, i::Int)
     copyto!(parent(A), cpy)
     return A
 end
-
-# TODO: deletaat, push, insert
+function _resizedim!(A::AbstractArray, _itr, i::Int)
+    itr, d = if eltype(_itr) <: Bool
+        @boundscheck length(_itr) == size(A, i) || throw(BoundsError(A))
+        _itr, sum(_itr)
+    else
+        @boundscheck all(j -> 0 < j <= size(A, i), _itr) || throw(BoundsError(A))
+        bool_itr = zeros(Bool, size(A, i))
+        bool_itr[_itr] .= true
+        bool_itr, length(_itr)
+    end
+    d = sum(itr)
+    blk_len, blk_num, batch_num = _blkinfo(A, i)
+    nlen = blk_len * d * batch_num
+    cpy = similar(A, nlen)
+    batch_len = blk_len * blk_num
+    δ = 0
+    for j in 1:batch_num
+        for (k, flag) in enumerate(itr)
+            if flag
+                soffs = batch_len * (j - 1) + blk_len * (k - 1) + 1
+                doffs = soffs + δ
+                copyto!(cpy, doffs, parent(A), soffs, blk_len)
+            else
+                δ = δ - blk_len
+            end
+        end
+    end
+    resize!(parent(A), nlen)
+    setsize!(A, d, i)
+    copyto!(parent(A), cpy)
+    return A
+end
 
 # aux methods
-_getM(::Colon, rest::Dim...) = _getM(rest...)
-_getM(::Vararg{Dim,M}) where {M} = M
+restdim(::Type{T}, ::T, rest...) where {T} = restdim(T, rest...)
+restdim(::Type{T}, rest...) where {T} = length(rest)
 
-tailn(t::Tuple, ::Val{0}) = t
-tailn(t::Tuple, ::Val{1}) = Base.tail(t)
-tailn(t::Tuple, ::Val{N}) where {N} = tailn(Base.tail(t), Val(N - 1))
+function tailn(::Val{N}, item, items...) where {N}
+    M = length(items)
+    if N == M
+        return items
+    elseif N > M
+        return item, items...
+    elseif N < M
+        return tailn(Val(N), items...)
+    end
+end
 
 _accumulate_rec(f, op, init, item) = (init, op(init, f(item)))
 _accumulate_rec(f, op, init, item, items...) =
     (init, _accumulate_rec(f, op, op(init, f(item)), items...)...)
 
-# convert no int dims to int dims, but keep colon
+# convert no int dims to int dims, but keep colon and itr
 _todims(sz::Dims) = sz
 _todims(sz::Tuple) = map(_todim, sz)
-
-# convert no int dims and colon to int dims
-_todims(::AbstractArray, sz::Dims) = sz
-_todims(A::AbstractArray, sz::Tuple) = map(_todim, size(A), sz)
 
 _todim(dim::Int) = dim
 _todim(::Colon) = Colon()
 _todim(dim::Integer) = Int(dim)
+_todim(itr) = itr # any iterater
+
+# convert no int dims, itr and colon to int dims
+_todims(::AbstractArray, sz::Dims) = sz
+_todims(A::AbstractArray, sz::Tuple) = map(_todim, size(A), sz)
 
 _todim(::Int, dim::Int) = dim
 _todim(dim::Int, ::Colon) = dim
 _todim(::Int, dim::Integer) = Int(dim)
+_todim(::Int, itr) = eltype(itr) <: Bool ? sum(itr) : length(itr) # any iterater
 
-function _blkinfo(A::AbstractArray, n::Integer)
-    n <= ndims(A) || throw(ArgumentError("dim must less than ndims(A)"))
+function _blkinfo(A::AbstractArray, i::Integer)
+    i <= ndims(A) || throw(ArgumentError("dim must less than ndims(A)"))
     blk_len = 1
     sz = size(A)
-    @inbounds for i in 1:(n-1)
-        blk_len *= sz[i]
+    @inbounds for j in 1:(i-1)
+        blk_len *= sz[j]
     end
     batch_num = 1
-    @inbounds for i in (n+1):ndims(A)
-        batch_num *= sz[i]
+    @inbounds for j in (i+1):ndims(A)
+        batch_num *= sz[j]
     end
-    return blk_len, @inbounds(sz[n]), batch_num
+    return blk_len, @inbounds(sz[i]), batch_num
 end
 
 checksize(::Type{Bool}, A, sz::Dims) = (&)(map(>(0), sz)...)

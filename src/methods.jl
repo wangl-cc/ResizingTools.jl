@@ -1,5 +1,22 @@
 const Dim = Union{Int,Colon}
-const Resizable = Union{Vector,BitVector}
+const BufferType = Union{Vector,BitVector}
+
+"""
+    isresizable(A::AbstractArray)
+
+Check if the type of `A` is resizable.
+
+!!! Note
+
+    `isresizable(A)` for a `Vector` or a `BitVector` will return `false` even
+    which can be resized by `resize!(A, n)`.
+"""
+isresizable(A::AbstractArray) = isresizable(typeof(A))
+isresizable(::Type{T}) where {T} = _isresizable(has_parent(T), parent_type(T))
+_isresizable(::True, ::Type{T}) where {T} = isresizable(T)
+_isresizable(::True, ::Type{<:Vector}) = true
+_isresizable(::True, ::Type{<:BitVector}) = true
+_isresizable(::False, ::Type) = false
 
 # getsize
 """
@@ -15,37 +32,37 @@ getsize(A::AbstractArray) = throw_methoderror(getsize, A)
 
 # setsize!(A, sz)
 """
-    setsize!(A::AbstractArray{T,N}, sz::Dims{N}) where {T,N}
-    setsize!(A::AbstractArray, d::Integer, i::Integer)
+    setsize!(A::AbstractArray{T,N}, sz) where {T,N}
 
-Mutate the size of `A` to `sz`.
+Set the size of `A` to `sz`
 """
-setsize!
-# setsize!(A, sz)
-setsize!(A::AbstractArray{T,N}, sz::NTuple{N,Dim}) where {T,N} = setsize!(A, _todims(A, sz))
+setsize!(A::AbstractArray{T,N}, sz::NTuple{N,Any}) where {T,N} = setsize!(A, _todims(A, sz))
 setsize!(A::AbstractArray{T,N}, ::Dims{N}) where {T,N} = throw_methoderror(setsize!, A)
 
 # setsize!(A, d, i)
+"""
+    setsize!(A::AbstractArray, d::Integer, i::Integer)
+
+Set the `i`th dimension to `d`.
+"""
 setsize!(A::AbstractArray, d::Integer, i::Integer) = setsize!(A, Int(d), Int(i))
 setsize!(A::AbstractArray{T,N}, d::Int, i::Int) where {T,N} =
     setsize!(A, setindex(getsize(A), d, i))
 
 # Base.sizehint!(A, sz)
 function Base.sizehint!(A::AbstractArray{T,N}, sz::NTuple{N,Dim}) where {T,N}
-    if Bool(has_parent(A))
+    if isresizable(A)
         return _sizehint!(A, _todims(A, sz)...)
     end
     return throw_methoderror(sizehint!, A)
 end
-
 _sizehint!(A::AbstractArray{T,N}, sz::Vararg{Int,N}) where {T,N} =
     (sizehint!(parent(A), prod(sz)); A)
-_sizehint!(A::AbstractArray, n::Int) = (sizehint!(parent(A), n); A)
 
 # Base.resize!(A, sz)
 function Base.resize!(A::AbstractArray{T,N}, sz::NTuple{N,Any}) where {T,N}
-    if Bool(has_parent(A))
-        return _resize!(A, _todims(sz)...) # without A to preserve Colon
+    if isresizable(A)
+        return _resize!(A, _todims(sz)...) # without A to preserve Colon and itr
     end
     return throw_methoderror(resize!, A)
 end
@@ -59,8 +76,8 @@ end
 # resize array with Int sz
 function _resize!(A::AbstractArray{T,N}, nsz::Vararg{Int,N}) where {T,N}
     checksize(A, nsz)
-    # resize parent if parent is not Resizable
-    parent_type(A) <: Resizable || begin
+    # resize parent if parent is not BufferType
+    parent_type(A) <: BufferType || begin
         resize!(parent(A), nsz)
         setsize!(A, nsz)
         return A
@@ -92,8 +109,8 @@ function _resize!(A::AbstractArray{T,N}, nsz::Vararg{Int,N}) where {T,N}
 end
 # resize with Colon
 function _resize!(A::AbstractArray{T,N}, nsz::Vararg{Dim,N}) where {T,N}
-    # resize parent if parent is not Resizable
-    parent_type(A) <: Resizable || begin
+    # resize parent if parent is not BufferType
+    parent_type(A) <: BufferType || begin
         resize!(parent(A), nsz)
         setsize!(A, nsz)
         return A
@@ -155,7 +172,7 @@ function _resize!(A::AbstractArray{T,N}, inds::Vararg{Any,N}) where {T,N}
     @boundscheck checkbounds(A, inds...)
     nsz = _todims(A, inds)
     # resize parent if parent is not Resizable
-    parent_type(A) <: Resizable || begin
+    parent_type(A) <: BufferType || begin
         resize!(parent(A), inds)
         setsize!(A, nsz)
         return A

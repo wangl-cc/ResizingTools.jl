@@ -35,7 +35,7 @@ _params(T::DataType) = T.parameters
                 p1 = _params(m1.sig)
                 p2 = _params(m2.sig)
                 for (t1, t2) in zip(p1, p2)
-                    typeintersect(t1, t2) === Union{} || return false
+                    typeintersect(t1, t2) === Union{} && return false
                 end
                 return true
             end

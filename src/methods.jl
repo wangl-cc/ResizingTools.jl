@@ -50,19 +50,26 @@ setsize!(A::AbstractArray{T,N}, d::Int, i::Int) where {T,N} =
     setsize!(A, setindex(getsize(A), d, i))
 
 # Base.sizehint!(A, sz)
-function Base.sizehint!(A::AbstractArray{T,N}, sz::NTuple{N,Dim}) where {T,N}
+Base.sizehint!(A::AbstractArray{T,N}, sz::NTuple{N,Any}) where {T,N} =
+        sizehint!(A, prod(_todims(A, sz)))
+function Base.sizehint!(A::AbstractArray, nl::Integer)
     if isresizable(A)
-        return _sizehint!(A, _todims(A, sz)...)
+        sizehint!(parent(A), nl)
+        return A
     end
     return throw_methoderror(sizehint!, A)
 end
-_sizehint!(A::AbstractArray{T,N}, sz::Vararg{Int,N}) where {T,N} =
-    (sizehint!(parent(A), prod(sz)); A)
 
 # Base.resize!(A, sz)
 function Base.resize!(A::AbstractArray{T,N}, sz::NTuple{N,Any}) where {T,N}
     if isresizable(A)
-        return _resize!(A, _todims(sz)...) # without A to preserve Colon and itr
+        if parent_type(A) <: BufferType
+            return _resize!(A, _todims(sz)...)
+        else
+            resize!(parent(A), sz)
+            setsize!(A, _todims(A, sz))
+            return A
+        end
     end
     return throw_methoderror(resize!, A)
 end
@@ -76,13 +83,6 @@ end
 # resize array with Int sz
 function _resize!(A::AbstractArray{T,N}, nsz::Vararg{Int,N}) where {T,N}
     checksize(A, nsz)
-    # resize parent if parent is not BufferType
-    parent_type(A) <: BufferType || begin
-        resize!(parent(A), nsz)
-        setsize!(A, nsz)
-        return A
-    end
-    # if parent is Resizable
     sz = size(A)
     nsz == sz && return A # if sz not change
     if nsz[1:N-1] == sz[1:N-1] # if only last dim changed
@@ -109,12 +109,6 @@ function _resize!(A::AbstractArray{T,N}, nsz::Vararg{Int,N}) where {T,N}
 end
 # resize with Colon
 function _resize!(A::AbstractArray{T,N}, nsz::Vararg{Dim,N}) where {T,N}
-    # resize parent if parent is not BufferType
-    parent_type(A) <: BufferType || begin
-        resize!(parent(A), nsz)
-        setsize!(A, nsz)
-        return A
-    end
     M = restdim(Colon, nsz...)
     # if only last dim changed
     if M == 1
@@ -171,12 +165,6 @@ _resize!(A::AbstractArray{T,N}, ::Vararg{Colon,N}) where {T,N} = A
 function _resize!(A::AbstractArray{T,N}, inds::Vararg{Any,N}) where {T,N}
     @boundscheck checkbounds(A, inds...)
     nsz = _todims(A, inds)
-    # resize parent if parent is not Resizable
-    parent_type(A) <: BufferType || begin
-        resize!(parent(A), inds)
-        setsize!(A, nsz)
-        return A
-    end
     nlen = prod(nsz)
     copyto!(parent(A), A[inds...])
     resize!(parent(A), nlen)
@@ -186,8 +174,14 @@ end
 
 # Base.resize!(A, d, i)
 function Base.resize!(A::AbstractArray, d, i::Integer)
-    if Bool(has_parent(A))
-        return _resizedim!(A, _todim(d), Int(i))
+    if isresizable(A)
+        if parent_type(A) <: BufferType
+            return _resizedim!(A, _todim(d), Int(i))
+        else
+            resize!(parent(A), d, i)
+            setsize!(A, _todim(size(A, i), d), i)
+            return A
+        end
     end
     return throw_methoderror(resize!, A)
 end

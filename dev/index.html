@@ -6,22 +6,22 @@
  1  4  7
  2  5  8
  3  6  9</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; M == RM</code><code class="nohighlight hljs ansi" style="display:block;">true</code></pre><p>Once a <code>SimpleRDArray</code> is created, you can almost do anything with which likes a normal <code>Array</code> with similar performance:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; using BenchmarkTools</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; @benchmark $RM * $RM</code><code class="nohighlight hljs ansi" style="display:block;">BenchmarkTools.Trial: 10000 samples with 980 evaluations.
- Range (min … max):  48.372 ns …  1.122 μs  ┊ GC (min … max): 0.00% … 87.38%
- Time  (median):     68.272 ns              ┊ GC (median):    0.00%
- Time  (mean ± σ):   74.295 ns ± 50.332 ns  ┊ GC (mean ± σ):  3.72% ±  5.32%
+ Range (min … max):  69.290 ns …  4.742 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     72.861 ns              ┊ GC (median):    0.00%
+ Time  (mean ± σ):   81.722 ns ± 75.213 ns  ┊ GC (mean ± σ):  3.77% ± 5.34%
 
-         ▃▄▂█▄▁▁▁▁▁▁▁                                      ▁▁ ▁
-  ▆▄▁▅▆▁▁██████████████▇▇▆▇▆▅▄▃▃▃▃▄▃▁▄▁▁▁▁▁▁▁▁▁▁▁▁▁▁▃▅▆▅▅▆███ █
-  48.4 ns      Histogram: log(frequency) by time       160 ns &lt;
+  ▁██▂▂▁▁▁▁                                           ▁▁▁     ▂
+  ██████████▇▆▆▇▇▇▇▇▇▅▅▅▅▃▇▅▆▆▇▆▆▇▅▆▅▃▅▅▄▅▁▄▁▅▅▃▆▄▄▄▅████▇▅▅▅ █
+  69.3 ns      Histogram: log(frequency) by time       171 ns &lt;
 
- Memory estimate: 160 bytes, allocs estimate: 1.</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; @benchmark $M * $M</code><code class="nohighlight hljs ansi" style="display:block;">BenchmarkTools.Trial: 10000 samples with 981 evaluations.
- Range (min … max):  49.546 ns …  1.251 μs  ┊ GC (min … max): 0.00% … 90.70%
- Time  (median):     69.119 ns              ┊ GC (median):    0.00%
- Time  (mean ± σ):   75.598 ns ± 62.096 ns  ┊ GC (mean ± σ):  4.61% ±  5.42%
+ Memory estimate: 160 bytes, allocs estimate: 1.</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; @benchmark $M * $M</code><code class="nohighlight hljs ansi" style="display:block;">BenchmarkTools.Trial: 10000 samples with 979 evaluations.
+ Range (min … max):  67.318 ns …   4.598 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     69.768 ns               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   81.836 ns ± 100.419 ns  ┊ GC (mean ± σ):  4.42% ± 5.42%
 
-     ▁   ▄▂▃█▄▂▁▁▁▁▁▁                                      ▁  ▁
-  ▅▁▁█▆▁▄██████████████▇▇▆▆▅▅▁▃▃▅▃▃▃▁▁▁▁▃▁▁▁▁▁▁▁▁▁▁▁▄▅▅▄▅▆███ █
-  49.5 ns      Histogram: log(frequency) by time       159 ns &lt;
+  ██▂▁▁▁▂   ▁▁                           ▁▁▁                   ▂
+  ███████▇█████▇▇▅▆▅▇██▆▅█▆▆▅▆▆▅▅▆▅▅▅▄▃▄████▇▅▅▄▃▃▅▁▃▅▄▁▁▄▄▄▅▃ █
+  67.3 ns       Histogram: log(frequency) by time       203 ns &lt;
 
  Memory estimate: 160 bytes, allocs estimate: 1.</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; RM * RM == M * M</code><code class="nohighlight hljs ansi" style="display:block;">true</code></pre><p>Besides, a <code>SimpleRDArray</code> can be resized in many ways:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; resize!(RM, (4, 4)) # resize RM to 4 * 4</code><code class="nohighlight hljs ansi" style="display:block;">4×4 SimpleRDArray{Int64, 2}:
  1  4   7   81
@@ -37,4 +37,4 @@
  0</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; resize!(RM, Bool[1, 1, 0, 1], 1) # delete RM[3, :]</code><code class="nohighlight hljs ansi" style="display:block;">3×3 SimpleRDArray{Int64, 2}:
  1  4  7
  2  5  8
- 0  0  0</code></pre></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="interfaces/">Resizing Interfaces »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.6 on <span class="colophon-date" title="Saturday 18 September 2021 16:03">Saturday 18 September 2021</span>. Using Julia version 1.6.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ 0  0  0</code></pre></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="interfaces/">Resizing Interfaces »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.6 on <span class="colophon-date" title="Saturday 18 September 2021 16:15">Saturday 18 September 2021</span>. Using Julia version 1.6.2.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

@@ -18,6 +18,21 @@ _isresizable(::True, ::Type{<:Vector}) = true
 _isresizable(::True, ::Type{<:BitVector}) = true
 _isresizable(::False, ::Type) = false
 
+
+"""
+    mapindex(A::AbstractArray, I::Tuple)
+
+Map the index or indices `I` of `A` to index of `parent(A)`.
+"""
+mapindex
+
+mapindex(::AbstractArray, I::Tuple) = I
+mapindex(::AbstractArray, i::Integer, I) = Int(i), I
+# adjoint and transpose
+mapindex(A::AdjOrTransAbsVec, (i, I)::Tuple) = (checkbounds(A, i, :); (I,)) # don't check I
+mapindex(::AdjOrTransAbsMat, (I, J)::Tuple) = (J, I)
+mapindex(::AdjOrTrans, i::Integer, I) = ifelse(i == 1, 2, 1), I
+
 # getsize
 """
     getsize(A::AbstractArray, [dim])
@@ -37,7 +52,7 @@ getsize(A::AbstractArray) = throw_methoderror(getsize, A)
 Set the size of `A` to `sz`
 """
 setsize!(A::AbstractArray{T,N}, sz::NTuple{N,Any}) where {T,N} = setsize!(A, _todims(A, sz))
-setsize!(A::AbstractArray{T,N}, ::Dims{N}) where {T,N} = throw_methoderror(setsize!, A)
+setsize!(A::AbstractArray{T,N}, ::Dims{N}) where {T,N} = A
 
 # setsize!(A, d, i)
 """
@@ -47,7 +62,7 @@ Set the `i`th dimension to `d`.
 """
 setsize!(A::AbstractArray, d::Integer, i::Integer) = setsize!(A, Int(d), Int(i))
 setsize!(A::AbstractArray{T,N}, d::Int, i::Int) where {T,N} =
-    setsize!(A, setindex(getsize(A), d, i))
+    setsize!(A, setindex(size(A), d, i))
 
 # Base.sizehint!(A, sz)
 Base.sizehint!(A::AbstractArray{T,N}, sz::NTuple{N,Any}) where {T,N} =
@@ -66,8 +81,8 @@ function Base.resize!(A::AbstractArray{T,N}, sz::NTuple{N,Any}) where {T,N}
         if parent_type(A) <: BufferType
             return _resize!(A, _todims(sz)...)
         else
-            resize!(parent(A), sz)
-            setsize!(A, _todims(A, sz))
+            resize!(parent(A), mapindex(A, sz))
+            setsize!(A, _todims(sz))
             return A
         end
     end
@@ -173,13 +188,14 @@ function _resize!(A::AbstractArray{T,N}, inds::Vararg{Any,N}) where {T,N}
 end
 
 # Base.resize!(A, d, i)
-function Base.resize!(A::AbstractArray, d, i::Integer)
+function Base.resize!(A::AbstractArray, I, i::Integer)
     if isresizable(A)
         if parent_type(A) <: BufferType
-            return _resizedim!(A, _todim(d), Int(i))
+            return _resizedim!(A, _todim(I), Int(i))
         else
-            resize!(parent(A), d, i)
-            setsize!(A, _todim(size(A, i), d), i)
+            i, I = mapindex(A, i, I)
+            resize!(parent(A), I, i)
+            setsize!(A, _todim(size(A, i), I), i)
             return A
         end
     end
@@ -211,11 +227,10 @@ function _resizedim!(A::AbstractArray, d::Int, i::Int)
     return A
 end
 function _resizedim!(A::AbstractArray, _itr, i::Int)
+    @boundscheck checkindex(Bool, axes(A, i), _itr) || throw(BoundsError(A))
     itr, d = if eltype(_itr) <: Bool
-        @boundscheck length(_itr) == size(A, i) || throw(BoundsError(A))
         _itr, sum(_itr)
     else
-        @boundscheck all(j -> 0 < j <= size(A, i), _itr) || throw(BoundsError(A))
         bool_itr = zeros(Bool, size(A, i))
         bool_itr[_itr] .= true
         bool_itr, length(_itr)

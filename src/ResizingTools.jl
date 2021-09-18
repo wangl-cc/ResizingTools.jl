@@ -1,8 +1,9 @@
 module ResizingTools
 
 using ArrayInterface
-using Static
 using ArrayInterface: has_parent, parent_type
+using LinearAlgebra: AdjOrTrans, AdjOrTransAbsVec, AdjOrTransAbsMat
+using Static
 
 export SimpleRDArray, Size
 

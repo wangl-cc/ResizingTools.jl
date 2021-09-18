@@ -53,4 +53,7 @@ _params(T::DataType) = T.parameters
     @testset "WarpedArray" begin
         include("warpedarray.jl")
     end
+    @testset "AdjoinOrTranspose" begin
+        include("adjortrans.jl")
+    end
 end

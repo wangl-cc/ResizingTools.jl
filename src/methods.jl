@@ -6,7 +6,7 @@ const BufferType = Union{Vector,BitVector}
 
 Check if the type of `A` is resizable.
 
-!!! Note
+!!! info
 
     `isresizable(A)` for a `Vector` or a `BitVector` will return `false` even
     which can be resized by `resize!(A, n)`.

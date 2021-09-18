@@ -2,10 +2,10 @@
 
 ## Resizable Dense Array
 
-[`AbstractRDArray`](@ref) is a subtype of `DenseArray` with some predefined
-methods. So if an array type `RDArray` is a subtype of `DenseArray`, 
-a convenient way is to make it a subtype of `AbstractRDArray`, the defined
-methods below:
+[`AbstractRDArray`](@ref ResizingTools.AbstractRDArray) is a subtype of
+`DenseArray` with some predefined methods. So if an array type `RDArray`
+is a subtype of `DenseArray`, a convenient way is to make it a subtype
+of `AbstractRDArray`, the defined methods below:
 
 | Required methods                                                     | Brief description                                                   |
 | :------------------------------------------------------------------- | :------------------------------------------------------------------ |

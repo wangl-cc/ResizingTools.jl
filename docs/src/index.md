@@ -28,7 +28,7 @@ RM * RM == M * M
 ```
 
 Besides, a `SimpleRDArray` can be resized in many ways:
-```@repl getstart
+```@repl get-start
 resize!(RM, (4, 4)) # resize RM to 4 * 4
 RM[1:3,1:3] == M
 resize!(RM, 3, 2) # resize the 2nd dimension of RM to 3

@@ -95,4 +95,4 @@ julia> resize!(RM, Bool[1, 1, 0, 1], 1) # delete RM[3, :]
 ## Make your own array resizable
 
 To make your own resizable array, you only need is defined some interface
-methods, see [docs]() for details.
+methods, see [docs](https://wangl-cc.github.io/ResizingTools.jl/dev/interfaces) for details.

@@ -6,7 +6,7 @@ DocMeta.setdocmeta!(ResizingTools, :DocTestSetup, :(using ResizingTools); recurs
 
 makedocs(;
     sitename="ResizingTools.jl",
-    pages=["index.md", "interface.md", "references.md"],
+    pages=["index.md", "interfaces.md", "references.md"],
 )
 
 deploydocs(; repo="github.com/wangl-cc/ResizingTools.jl.git")

@@ -3,6 +3,7 @@
 [![Build Status](https://github.com/wangl-cc/ResizingTools.jl/actions/workflows/ci.yml/badge.svg?branch=master)](https://github.com/wangl-cc/ResizingTools.jl/actions/workflows/ci.yml)
 [![codecov](https://codecov.io/gh/wangl-cc/ResizingTools.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/wangl-cc/ResizingTools.jl)
 [![GitHub](https://img.shields.io/github/license/wangl-cc/ResizingTools.jl)](https://github.com/wangl-cc/ResizingTools.jl/blob/master/LICENSE)
+[![Docs dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://wangl-cc.github.io/ResizingTools.jl/dev/)
 
 `ResizingTools` helps you create a `Array` type, which can be resized at each dimension.
 

@@ -21,11 +21,10 @@ _isresizable(::False, ::Type) = false
 
 """
     mapindex(A::AbstractArray, I::Tuple)
+    mapindex(A::AbstractArray, i::Integer, I)
 
 Map the index or indices `I` of `A` to index of `parent(A)`.
 """
-mapindex
-
 mapindex(::AbstractArray, I::Tuple) = I
 mapindex(::AbstractArray, i::Integer, I) = Int(i), I
 # adjoint and transpose
@@ -75,7 +74,11 @@ function Base.sizehint!(A::AbstractArray, nl::Integer)
     return throw_methoderror(sizehint!, A)
 end
 
-# Base.resize!(A, sz)
+"""
+    Base.resize!(A::AbstractArray{T,N}, sz)
+
+Resize `A` to `sz`. `sz` can be a tuple of integer or Colon or iterator.
+"""
 function Base.resize!(A::AbstractArray{T,N}, sz::NTuple{N,Any}) where {T,N}
     if isresizable(A)
         if parent_type(A) <: BufferType
@@ -187,7 +190,11 @@ function _resize!(A::AbstractArray{T,N}, inds::Vararg{Any,N}) where {T,N}
     return A
 end
 
-# Base.resize!(A, d, i)
+"""
+    Base.resize!(A::AbstractArray{T,N}, I, i::Integer)
+
+Resize the `i`th dimension to `I`, where `I` can be an integer or a colon or an iterator.
+"""
 function Base.resize!(A::AbstractArray, I, i::Integer)
     if isresizable(A)
         if parent_type(A) <: BufferType

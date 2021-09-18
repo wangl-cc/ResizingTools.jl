@@ -3,18 +3,6 @@
 
 `N`-dimensional resizable dense array with elements of type `T` with some
 pre-defined array methods.
-
-Declared a subtype like 'RDArray' and defined required methods:
-* `Base.parent(A::RDArray)`: return a dense array containing the data.
-* `ArrayInterface.parent_type(::Type{<:RDArray})`: return the type of its parent.
-* `ResizingTools.getsize(A::RDArray{T,N}) where {T,N}`: return sizes of `A`,
-* `ResizingTools.setsize!(A::RDArray{T,N}, dim::Dims{N}) where {T,N}`:
-  mutate the return of `getsize(A)` to `dims`.
-and optional methods:
-* `ResizingTools.getsize(A::RDArray, i::Int)`: like `size(A, i)`.
-* `ResizingTools.setsize!(A::RDArray, dim::Int, i::Int)`: mutate `size(A, i)`
-  to `dim`.
-Then your type `RDArray` will works like a dense array but resizable.
 """
 abstract type AbstractRDArray{T,N} <: DenseArray{T,N} end
 Base.IndexStyle(::Type{<:AbstractRDArray}) = IndexLinear()

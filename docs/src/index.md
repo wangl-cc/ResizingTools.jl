@@ -11,6 +11,7 @@ resizable dense array type named `SimpleRDArray` as a resizable alternative of
 can be created simply:
 
 ```@repl get-start
+using ResizingTools
 M = reshape(1:9, 3, 3)
 RM = SimpleRDArray(M)
 M == RM
@@ -19,7 +20,8 @@ M == RM
 Once a `SimpleRDArray` is created, you can almost do anything with which likes a
 normal `Array` with similar performance:
 
-```@repl get-start; setup=:(using BenchmarkTools)
+```@repl get-start
+using BenchmarkTools
 @benchmark $RM * $RM
 @benchmark $M * $M
 RM * RM == M * M

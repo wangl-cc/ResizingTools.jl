@@ -1,5 +1,5 @@
 # References
 
 ```@autodocs
-Modules = [ResizingTools, Base]
+Modules = [ResizingTools]
 ```

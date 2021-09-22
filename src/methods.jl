@@ -53,6 +53,9 @@ Set the size of `A` to `sz`
 setsize!(A::AbstractArray{T,N}, sz::NTuple{N,Any}) where {T,N} = setsize!(A, _todims(A, sz))
 setsize!(A::AbstractArray{T,N}, ::Dims{N}) where {T,N} = A
 
+has_setsize(t) = has_setsize(typeof(t))
+has_setsize(::Type{<:AbstractArray}) = false
+
 # setsize!(A, d, i)
 """
     setsize!(A::AbstractArray, d::Integer, i::Integer)
@@ -60,8 +63,13 @@ setsize!(A::AbstractArray{T,N}, ::Dims{N}) where {T,N} = A
 Set the `i`th dimension to `d`.
 """
 setsize!(A::AbstractArray, d::Integer, i::Integer) = setsize!(A, Int(d), Int(i))
-setsize!(A::AbstractArray{T,N}, d::Int, i::Int) where {T,N} =
-    setsize!(A, setindex(size(A), d, i))
+function setsize!(A::AbstractArray, d::Int, i::Int)
+    if has_setsize(A)
+        return setsize!(A, setindex(size(A), d, i))
+    else
+        return A
+    end
+end
 
 # Base.sizehint!(A, sz)
 Base.sizehint!(A::AbstractArray{T,N}, sz::NTuple{N,Any}) where {T,N} =

@@ -1,14 +1,14 @@
 using Test
 using ArrayInterface
 using ResizingTools
-using ResizingTools: setindex
+using ResizingTools: setindex, MethodUndefindeError, tailn
 using Aqua
 
 const V = rand(3)
 const M = rand(3, 3)
 const T = rand(3, 3, 3)
 
-const DIMS = (:, 2, 3, 4)
+const DIMS = (:, 0x2, 3, 4)
 const ITRS = (
     1:1,
     1:2,
@@ -55,5 +55,8 @@ _params(T::DataType) = T.parameters
     end
     @testset "AdjoinOrTranspose" begin
         include("adjortrans.jl")
+    end
+    @testset "MISC" begin
+        include("misc.jl")
     end
 end

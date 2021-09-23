@@ -12,7 +12,7 @@ end
 @inline Size(A::AbstractArray) = Size(size(A))
 
 const SizeOrTuple = Union{Size,Tuple}
-_totuple(sz::Size) = sz
+_totuple(sz::Size) = sz.sz
 _totuple(tp::Tuple) = tp
 
 @inline Base.length(::Size{N}) where {N} = N

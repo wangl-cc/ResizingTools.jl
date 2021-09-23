@@ -363,5 +363,12 @@ setindex(A::Tuple, v, i::Int) = map_enumerate((j, Aj) -> ifelse(j == i, v, Aj), 
 
 map_enumerate(f, t::NTuple{N}) where {N} = map(f, ntuple(identity, Val(N)), t)
 
+struct MethodUndefindeError <: Exception
+    f::Any
+    T::DataType
+end
+Base.showerror(io::IO, err::MethodUndefindeError) =
+    print(io, "MethodUndefindeError: ", err.f, " is not defined for ", err.T)
+
 throw_methoderror(f, A::AbstractArray{N}) where {N} =
-    error("`$f` is not defined for `$(typeof(A))`")
+    throw(MethodUndefindeError(f, typeof(A)))

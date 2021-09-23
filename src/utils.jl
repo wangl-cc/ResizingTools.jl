@@ -11,8 +11,13 @@ end
 @inline Size(I::Int...) = Size(I)
 @inline Size(A::AbstractArray) = Size(size(A))
 
+const SizeOrTuple = Union{Size,Tuple}
+_totuple(sz::Size) = sz
+_totuple(tp::Tuple) = tp
+
 @inline Base.length(::Size{N}) where {N} = N
 @inline Base.convert(::Type{T}, sz::Size) where {T<:Tuple} = convert(T, sz.sz)
+@inline Base.:(==)(t1::SizeOrTuple, t2::SizeOrTuple) = _totuple(t1) == _totuple(t2)
 set!(sz::Size{1}, nsz::NTuple{1,Int}) = (sz[1] = nsz[1]; sz)
 set!(sz::Size{2}, nsz::NTuple{2,Int}) = (sz[1] = nsz[1]; sz[2] = nsz[2]; sz)
 set!(sz::Size{3}, nsz::NTuple{3,Int}) = (sz[1] = nsz[1]; sz[2] = nsz[2]; sz[3] = nsz[3]; sz)

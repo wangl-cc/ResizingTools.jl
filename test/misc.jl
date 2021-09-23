@@ -18,3 +18,11 @@ end
     @test tailn(Val(4), 1, 2, 3, 4) == (1, 2, 3, 4)
     @test tailn(Val(5), 1, 2, 3, 4) == (1, 2, 3, 4)
 end
+
+@testset "Size" begin
+    tp = ntuple(identity, Val(4))
+    sz = Size(4, 4, 4, 4)
+    @test length(sz) = 4
+    set!(sz, tp)
+    @test convert(Tuple, sz) == tp
+end

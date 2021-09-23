@@ -8,7 +8,8 @@ abstract type AbstractRDArray{T,N} <: DenseArray{T,N} end
 Base.IndexStyle(::Type{<:AbstractRDArray}) = IndexLinear()
 Base.length(A::AbstractRDArray) = length(parent(A))
 Base.size(A::AbstractRDArray{T,N}) where {T,N} = convert(NTuple{N,Int}, getsize(A))
-Base.size(A::AbstractRDArray, d::Integer) = getsize(A, d)
+Base.size(A::AbstractRDArray, d::Integer) = d < 1 ? throw(BoundsError()) :
+                                            d > ndims(A) ? 1 : @inbounds getsize(A, d)
 Base.getindex(A::AbstractRDArray, i::Int) = parent(A)[i]
 Base.setindex!(A::AbstractRDArray, v, i::Int) = parent(A)[i] = v
 Base.unsafe_convert(::Type{Ptr{T}}, A::AbstractRDArray{T}) where {T} =
@@ -32,7 +33,7 @@ function SimpleRDArray(A::AbstractArray)
 end
 Base.parent(A::SimpleRDArray) = A.parent
 ArrayInterface.parent_type(::Type{<:SimpleRDArray{T,N}}) where {T,N} = Vector{T}
-getsize(A::SimpleRDArray) = A.sz
-getsize(A::SimpleRDArray, d::Int) = A.sz[d]
-setsize!(A::SimpleRDArray{T,N}, sz::Dims{N}) where {T,N} = set!(A.sz, sz)
-setsize!(A::SimpleRDArray{T,N}, dim::Int, i::Int) where {T,N} = A.sz[i] = dim
+@inline getsize(A::SimpleRDArray) = A.sz
+Base.@propagate_inbounds getsize(A::SimpleRDArray, d::Int) = A.sz[d]
+@inline setsize!(A::SimpleRDArray{T,N}, sz::Dims{N}) where {T,N} = set!(A.sz, sz)
+Base.@propagate_inbounds setsize!(A::SimpleRDArray, dim::Int, i::Int) = A.sz[i] = dim

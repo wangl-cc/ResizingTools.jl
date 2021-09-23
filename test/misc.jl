@@ -24,5 +24,5 @@ end
     sz = Size(4, 4, 4, 4)
     @test length(sz) == 4
     set!(sz, tp)
-    @test convert(Tuple, sz) == tp
+    @test sz == tp
 end

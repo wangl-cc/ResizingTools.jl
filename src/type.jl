@@ -5,13 +5,26 @@
 pre-defined array methods.
 """
 abstract type AbstractRDArray{T,N} <: DenseArray{T,N} end
-Base.IndexStyle(::Type{<:AbstractRDArray}) = IndexLinear()
-Base.length(A::AbstractRDArray) = length(parent(A))
-Base.size(A::AbstractRDArray{T,N}) where {T,N} = convert(NTuple{N,Int}, getsize(A))
-Base.size(A::AbstractRDArray, d::Integer) = d < 1 ? throw(BoundsError()) :
-                                            d > ndims(A) ? 1 : @inbounds getsize(A, d)
-Base.getindex(A::AbstractRDArray, i::Int) = parent(A)[i]
-Base.setindex!(A::AbstractRDArray, v, i::Int) = parent(A)[i] = v
+
+"""
+    AbstractRNArray{T,N} <: AbstractArray{T,N}
+
+`N`-dimensional resizable (no-dense) array with elements of type `T` with some
+pre-defined array methods.
+"""
+abstract type AbstractRNArray{T,N} <: AbstractArray{T,N} end
+
+const ResizableArray{T,N} = Union{AbstractRDArray{T,N},AbstractRNArray{T,N}}
+
+Base.IndexStyle(::Type{<:ResizableArray}) = IndexLinear()
+Base.length(A::ResizableArray) = length(parent(A))
+Base.size(A::ResizableArray{T,N}) where {T,N} = convert(NTuple{N,Int}, getsize(A))
+Base.size(A::ResizableArray, d::Integer) = d < 1 ? throw(BoundsError()) :
+                                           d > ndims(A) ? 1 : @inbounds getsize(A, d)
+Base.getindex(A::ResizableArray, i::Int) = parent(A)[i]
+Base.setindex!(A::ResizableArray, v, i::Int) = parent(A)[i] = v
+
+# DenseArray only
 Base.unsafe_convert(::Type{Ptr{T}}, A::AbstractRDArray{T}) where {T} =
     Base.unsafe_convert(Ptr{T}, parent(A))
 Base.elsize(::Type{T}) where {T<:AbstractRDArray} = Base.elsize(parent_type(T))

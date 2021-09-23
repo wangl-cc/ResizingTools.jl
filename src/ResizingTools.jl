@@ -5,7 +5,7 @@ using ArrayInterface: has_parent, parent_type
 using LinearAlgebra: AdjOrTrans, AdjOrTransAbsVec, AdjOrTransAbsMat
 using Static
 
-export SimpleRDArray, Size
+export SimpleRDArray, Size, getsize, setsize!, set!
 
 include("methods.jl")
 include("utils.jl")

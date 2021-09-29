@@ -1,4 +1,4 @@
-const Dim = Union{Int,Colon}
+const Dim = Union{Int,Base.Slice}
 const BufferType = Union{Vector,BitVector}
 
 """
@@ -19,17 +19,22 @@ _isresizable(::True, ::Type{<:BitVector}) = true
 _isresizable(::False, ::Type) = false
 
 """
-    mapindex(A::AbstractArray, I::Tuple)
-    mapindex(A::AbstractArray, i::Integer, I)
+    toparentinds(A::AbstractArray, Is::Tuple) -> Is′
 
-Map the index or indices `I` of `A` to index of `parent(A)`.
+Convert the index(s) `Is` of `A` to index(s) `Is′` of `parent(A)`.
 """
-mapindex(::AbstractArray, I::Tuple) = I
-mapindex(::AbstractArray, i::Integer, I) = Int(i), I
-# adjoint and transpose
-mapindex(A::AdjOrTransAbsVec, (i, I)::Tuple) = (checkbounds(A, i, :); (I,)) # don't check I
-mapindex(::AdjOrTransAbsMat, (I, J)::Tuple) = (J, I)
-mapindex(::AdjOrTrans, i::Integer, I) = ifelse(i == 1, 2, 1), I
+to_parentinds(::AbstractArray, Is::Tuple) = Is
+"""
+    toparentinds(A::AbstractArray, i::Integer, I) -> (i′, I′)
+
+Convert the index(s) `I` at `d`th dimension of `A` to index(s) `I′` at `d′`th
+dimentsion of `parent(A)`.
+"""
+to_parentinds(::AbstractArray, d::Integer, I) = Int(d), I
+# impl of adjoint and transpose
+to_parentinds(A::AdjOrTransAbsVec, (i, J)::Tuple) = (check_dimbounds(A, 1, i); (J,))
+to_parentinds(::AdjOrTransAbsMat, (I, J)::Tuple) = (J, I)
+to_parentinds(::AdjOrTrans, i::Integer, I) = ifelse(i == 1, 2, 1), I
 
 # getsize
 """
@@ -49,7 +54,8 @@ getsize(A::AbstractArray) = throw_methoderror(getsize, A)
 
 Set the size of `A` to `sz`
 """
-setsize!(A::AbstractArray{T,N}, sz::NTuple{N,Any}) where {T,N} = setsize!(A, todims(A, sz))
+setsize!(A::AbstractArray{T,N}, sz::NTuple{N,Any}) where {T,N} =
+    setsize!(A, _to_size(sz))
 setsize!(A::AbstractArray{T,N}, ::Dims{N}) where {T,N} = A
 
 has_setsize(t) = has_setsize(typeof(t))
@@ -57,14 +63,14 @@ has_setsize(::Type{<:AbstractArray}) = false
 
 # setsize!(A, d, i)
 """
-    setsize!(A::AbstractArray, d::Integer, i::Integer)
+    setsize!(A::AbstractArray, d::Integer, n)
 
-Set the `i`th dimension to `d`.
+Set the `d`th dimension to `n`.
 """
-setsize!(A::AbstractArray, d::Integer, i::Integer) = setsize!(A, Int(d), Int(i))
-function setsize!(A::AbstractArray, d::Int, i::Int)
+setsize!(A::AbstractArray, d::Integer, n) = setsize!(A, Int(d), _to_size(n))
+function setsize!(A::AbstractArray, d::Int, n::Int)
     if has_setsize(A)
-        return setsize!(A, setindex(size(A), d, i))
+        return setsize!(A, setindex(size(A), d, n))
     else
         return A
     end
@@ -72,7 +78,7 @@ end
 
 # Base.sizehint!(A, sz)
 Base.sizehint!(A::AbstractArray{T,N}, sz::NTuple{N,Any}) where {T,N} =
-    sizehint!(A, prod(todims(A, sz)))
+    sizehint!(A, prod(_to_size(sz)))
 function Base.sizehint!(A::AbstractArray, nl::Integer)
     if isresizable(A)
         sizehint!(parent(A), nl)
@@ -86,13 +92,14 @@ end
 
 Resize `A` to `sz`. `sz` can be a tuple of integer or Colon or iterator.
 """
-function Base.resize!(A::AbstractArray{T,N}, sz::NTuple{N,Any}) where {T,N}
+function Base.resize!(A::AbstractArray{T,N}, dims::NTuple{N,Any}, ::B=False()) where {T,N,B}
+    dims′ = _to_indices(A, dims, B())
     if isresizable(A)
         if parent_type(A) <: BufferType
-            return resize_buffer!(A, todims(sz)...)
+            return resize_buffer!(A, to_indices(A, dims′)...)
         else
-            resize!(parent(A), mapindex(A, sz))
-            setsize!(A, todims(sz))
+            resize!(parent(A), to_parentinds(A, dims′), True())
+            setsize!(A, dims′)
             return A
         end
     end
@@ -109,7 +116,7 @@ resize_buffer!
 function resize_buffer!(A::AbstractVector{T}, n::Int) where {T}
     checksize(A, (n,))
     resize!(parent(A), n) # resize! buffer by Base.resize!
-    setsize!(A, n, 1)
+    setsize!(A, 1, n)
     return A
 end
 # resize array with Int sz
@@ -119,7 +126,7 @@ function resize_buffer!(A::AbstractArray{T,N}, nsz::Vararg{Int,N}) where {T,N}
     nsz == sz && return A # if sz not change
     if nsz[1:N-1] == sz[1:N-1] # if only last dim changed
         resize!(parent(A), prod(nsz))
-        setsize!(A, nsz[N], N)
+        setsize!(A, N, nsz[N])
         return A
     end
     # normal case
@@ -140,21 +147,21 @@ function resize_buffer!(A::AbstractArray{T,N}, nsz::Vararg{Int,N}) where {T,N}
     return A
 end
 # resize with Colon
-function resize_buffer!(A::AbstractArray{T,N}, nsz::Vararg{Dim,N}) where {T,N}
-    M = restdim(Colon, nsz...)
+function resize_buffer!(A::AbstractArray{T,N}, dims::Vararg{Dim,N}) where {T,N}
+    M = restdim(Base.Slice, dims...)
     # if only last dim changed
     if M == 1
-        nsz[N] > 0 || error("dimension(s) must be > 0")
-        nlen = stride(A, N) * nsz[N]
+        dims[N] > 0 || error("dimension(s) must be > 0")
+        nlen = stride(A, N) * dims[N]
         resize!(parent(A), nlen)
-        setsize!(A, nsz[N], N)
+        setsize!(A, N, dims[N])
         return A
     end
-    nsz_int = todims(A, nsz)
-    checksize(A, nsz_int)
+    nsz = _to_size(dims)
+    checksize(A, nsz)
     sz_tail = tailn(Val(M), size(A)...)
-    nsz_tail = tailn(Val(M), nsz_int...)
-    nlen = prod(nsz_int)
+    nsz_tail = tailn(Val(M), nsz...)
+    nlen = prod(nsz)
     cpy = similar(A, nlen)
     blocklen = stride(A, N - M + 1)
     ssz_tail = map(min, sz_tail, nsz_tail)
@@ -192,11 +199,11 @@ function resize_buffer!(A::AbstractArray{T,N}, nsz::Vararg{Dim,N}) where {T,N}
     end
     return A
 end
-resize_buffer!(A::AbstractArray{T,N}, ::Vararg{Colon,N}) where {T,N} = A
+resize_buffer!(A::AbstractArray{T,N}, ::Vararg{Base.Slice,N}) where {T,N} = A
 # _resize! with inds
 function resize_buffer!(A::AbstractArray{T,N}, inds::Vararg{Any,N}) where {T,N}
     @boundscheck checkbounds(A, inds...)
-    nsz = todims(A, inds)
+    nsz = _to_size(inds)
     nlen = prod(nsz)
     copyto!(parent(A), A[inds...])
     resize!(parent(A), nlen)
@@ -205,73 +212,68 @@ function resize_buffer!(A::AbstractArray{T,N}, inds::Vararg{Any,N}) where {T,N}
 end
 
 """
-    Base.resize!(A::AbstractArray{T,N}, I, i::Integer)
+    Base.resize!(A::AbstractArray{T,N}, d::Integer, I)
 
-Resize the `i`th dimension to `I`, where `I` can be an integer or a colon or an iterator.
+Resize the `d`th dimension to `I`, where `I` can be an integer or a colon or an iterator.
 """
-function Base.resize!(A::AbstractArray, I, i::Integer)
+function Base.resize!(A::AbstractArray, d::Integer, I)
     if isresizable(A)
         if parent_type(A) <: BufferType
-            return resize_buffer_dim!(A, _todim(I), Int(i))
+            return resize_buffer_dim!(A, Int(d), Base.to_index(I))
         else
-            i, I = mapindex(A, i, I)
-            resize!(parent(A), I, i)
-            setsize!(A, _todim(size(A, i), I), i)
+            d′, Iʹ = to_parentinds(A, d, Base.to_index(I))
+            resize!(parent(A), d′, Iʹ)
+            setsize!(A, d′, Iʹ)
             return A
         end
     end
     return throw_methoderror(resize!, A)
 end
+Base.resize!(A::AbstractArray, ::Integer, ::Colon) = A
 
 """
-    resize_buffer_dim!(A::AbstractArray, I, i::Int) 
+    resize_buffer_dim!(A::AbstractArray, d::Int, I) 
 
-Implementation of `resize!(A, I, i)` where `perent(A)` is a `Vector`.
+Implementation of `resize!(A, d, I)` where `perent(A)` is a `Vector`.
 """
 resize_buffer_dim!
 
-function resize_buffer_dim!(A::AbstractArray, d::Int, i::Int)
+function resize_buffer_dim!(A::AbstractArray, d::Int, n::Int)
     N = ndims(A)
-    d == size(A, i) && return A
-    if i == N
-        resize!(parent(A), stride(A, N) * d)
-        setsize!(A, d, i)
+    n == size(A, d) && return A
+    if d == N
+        resize!(parent(A), stride(A, N) * n)
+        setsize!(A, N, n)
         return A
     end
-    blk_len, blk_num, batch_num = _blkinfo(A, i)
-    nlen = blk_len * d * batch_num
+    blk_len, blk_num, batch_num = _blkinfo(A, d)
+    nlen = blk_len * n * batch_num
     cpy = similar(A, nlen)
     batch_len = blk_len * blk_num
-    sbatch_len = blk_len * min(d, blk_num)
+    sbatch_len = blk_len * min(n, blk_num)
     δ = 0
     for j in 1:batch_num
         soffs = batch_len * (j - 1) + 1
         doffs = soffs + δ
         copyto!(cpy, doffs, parent(A), soffs, sbatch_len)
-        δ = δ + blk_len * (d - blk_num)
+        δ = δ + blk_len * (n - blk_num)
     end
     resize!(parent(A), nlen)
-    setsize!(A, d, i)
+    setsize!(A, d, n)
     copyto!(parent(A), cpy)
     return A
 end
-function resize_buffer_dim!(A::AbstractArray, _itr, i::Int)
-    @boundscheck checkindex(Bool, axes(A, i), _itr) || throw(BoundsError(A))
-    itr, d = if eltype(_itr) <: Bool
-        _itr, sum(_itr)
-    else
-        bool_itr = zeros(Bool, size(A, i))
-        bool_itr[_itr] .= true
-        bool_itr, length(_itr)
-    end
-    d = sum(itr)
-    blk_len, blk_num, batch_num = _blkinfo(A, i)
-    nlen = blk_len * d * batch_num
+function resize_buffer_dim!(A::AbstractArray, d::Int, I::Base.LogicalIndex)
+    @boundscheck check_dimbounds(A, d, I)
+    I′ = I.mask
+    n = I.sum
+    blk_len, blk_num, batch_num = _blkinfo(A, d)
+    nlen = blk_len * n * batch_num
     cpy = similar(A, nlen)
     batch_len = blk_len * blk_num
     δ = 0
     for j in 1:batch_num
-        for (k, flag) in enumerate(itr)
+        for (k, flag) in enumerate(I′)
             if flag
                 soffs = batch_len * (j - 1) + blk_len * (k - 1) + 1
                 doffs = soffs + δ
@@ -282,7 +284,33 @@ function resize_buffer_dim!(A::AbstractArray, _itr, i::Int)
         end
     end
     resize!(parent(A), nlen)
-    setsize!(A, d, i)
+    setsize!(A, d, n)
+    copyto!(parent(A), cpy)
+    return A
+end
+function resize_buffer_dim!(A::AbstractArray, d::Int, I::AbstractVector)
+    @boundscheck check_dimbounds(A, d, I)
+    I′ = zeros(Bool, size(A, d))
+    I′[I] .= true
+    n = length(I)
+    blk_len, blk_num, batch_num = _blkinfo(A, d)
+    nlen = blk_len * n * batch_num
+    cpy = similar(A, nlen)
+    batch_len = blk_len * blk_num
+    δ = 0
+    for j in 1:batch_num
+        for (k, flag) in enumerate(I′)
+            if flag
+                soffs = batch_len * (j - 1) + blk_len * (k - 1) + 1
+                doffs = soffs + δ
+                copyto!(cpy, doffs, parent(A), soffs, blk_len)
+            else
+                δ = δ - blk_len
+            end
+        end
+    end
+    resize!(parent(A), nlen)
+    setsize!(A, d, n)
     copyto!(parent(A), cpy)
     return A
 end
@@ -306,41 +334,12 @@ _accumulate_rec(f, op, init, item) = (init, op(init, f(item)))
 _accumulate_rec(f, op, init, item, items...) =
     (init, _accumulate_rec(f, op, op(init, f(item)), items...)...)
 
-# convert no int dims to int dims, but keep colon and itr
+_to_indices(::AbstractArray, dims, ::True) = dims
+_to_indices(A::AbstractArray, dims, ::False) = to_indices(A, dims)
 
-"""
-    todims(sz::Tuple)
-
-Convert elements of `sz` to `Int` which is a Integer.
-"""
-todims(sz::Tuple) = map(_todim, sz)
-todims(sz::Dims) = sz
-
-_todim(dim::Int) = dim
-_todim(::Colon) = Colon()
-_todim(dim::Integer) = Int(dim)
-_todim(itr) = itr # any iterater
-
-# convert no int dims, itr and colon to int dims
-"""
-    todims(A::AbstractArray, sz::Tuple)
-
-Convert all elements of `sz` to `Int`. Rules:
-
-* `sz[i]` is an `Integer`, return `Int(sz[i])`,
-* `sz[i]` is a `Colon`, return `size(A, i)`,
-* `sz[i]` is an iterator with element of type `Bool`, return `prod(sz)`,
-* `sz[i]` is an iterator with element of type `Integer`, return `sum(sz)`.
-"""
-todims(A::AbstractArray, sz::Tuple) = map(_todim, size(A), sz)
-todims(::AbstractArray, sz::Dims) = sz
-
-_todim(::Int, dim::Int) = dim
-_todim(dim::Int, ::Colon) = dim
-_todim(::Int, dim::Integer) = Int(dim)
-_todim(::Int, itr) =
-    eltype(itr) <: Bool ? sum(itr) :
-    eltype(itr) <: Integer ? length(itr) : error("Unsupport indices")
+_to_size(inds::Tuple) = map(_to_size, inds)
+_to_size(ind) = length(ind)
+_to_size(ind::Integer) = Int(ind)
 
 function _blkinfo(A::AbstractArray, i::Integer)
     i <= ndims(A) || throw(ArgumentError("dim must less than ndims(A)"))
@@ -359,10 +358,13 @@ end
 checksize(::Type{Bool}, A, sz::Dims) = (&)(map(>(0), sz)...)
 checksize(A, sz::Dims) = checksize(Bool, A, sz) || error("dimension(s) must be > 0")
 
-setindex(A::Tuple, v, i::Int) = map_enumerate((j, Aj) -> ifelse(j == i, v, Aj), A)
+# checkbounds at dim d
+check_dimbounds(A::AbstractArray, d::Integer, I) =
+    checkindex(Bool, axes(A, d), I) || throw_dimboundserror(A, d, I)
 
-map_enumerate(f, t::NTuple{N}) where {N} = map(f, ntuple(identity, Val(N)), t)
+setindex(A::NTuple{N,Any}, v, i::Int) where {N} = ntuple(j -> ifelse(j == i, v, A[j]), Val(N))
 
+# Exceptions
 struct MethodUndefindeError <: Exception
     f::Any
     T::DataType
@@ -372,3 +374,22 @@ Base.showerror(io::IO, err::MethodUndefindeError) =
 
 throw_methoderror(f, A::AbstractArray{N}) where {N} =
     throw(MethodUndefindeError(f, typeof(A)))
+
+struct DimBoundsError <: Exception
+    A::AbstractArray
+    d::Int
+    I::Any
+end
+function Base.showerror(io::IO, err::DimBoundsError)
+    print(io, "DimBoundsError: attempt to access ")
+    summary(io, err.A),
+    print(io, " at dimension ", err.d, " with index ")
+    if err.I isa Base.LogicalIndex
+        print(io, err.I.mask)
+    else
+        print(io, err.I)
+    end
+    return nothing
+end
+throw_dimboundserror(A::AbstractArray{N}, d::Integer, I) where {N} =
+    throw(DimBoundsError(A, Int(d), I))

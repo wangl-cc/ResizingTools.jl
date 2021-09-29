@@ -11,6 +11,14 @@ end
     @test_throws MethodUndefindeError resize!(1:2, 3, 1)
 end
 
+@testset "wrong index" begin
+    tV = SimpleRDArray(V)
+    @test_throws DimBoundsError resize!(tV, 1, Bool[0, 0, 1, 0])
+    @test_throws DimBoundsError resize!(tV, 2, Bool[0, 0, 1, 0])
+    @test_throws DimBoundsError resize!(tV, 1, 3:4)
+    @test_throws DimBoundsError resize!(tV, 2, 1:2)
+end
+
 @testset "tailn" begin
     @test tailn(Val(1), 1, 2, 3, 4) == (4,)
     @test tailn(Val(2), 1, 2, 3, 4) == (3, 4)

@@ -1,4 +1,10 @@
 const Dim = Union{Int,Base.Slice}
+
+"""
+    BufferType = Union{Vector,BitVector}
+
+Types which can be a buffer.
+"""
 const BufferType = Union{Vector,BitVector}
 
 """
@@ -41,7 +47,7 @@ to_parentinds(::AdjOrTrans, i::Integer, I) = ifelse(i == 1, 2, 1), I
     getsize(A::AbstractArray, [dim])
 
 Return the dimensions of `A` unlike `size` which may not return a
-`NTuple{N,Int}`. For a [`AbstractRDArray`](@ref), `convert(Tuple, getsize(A))`
+`NTuple{N,Int}`. For a [`ResizableArray`](@ref), `convert(Tuple, getsize(A))`
 is the default implementation of `size(A)`.
 """
 getsize(A::AbstractArray, d::Integer) = getsize(A, Int(d))
@@ -77,8 +83,23 @@ function setsize!(A::AbstractArray, d::Int, n::Int)
 end
 
 # Base.sizehint!(A, sz)
+"""
+    sizehint!(A::AbstractArray{T,N}, sz::NTuple{N}) where {T,N}
+
+Suggest that array `A` reserve size for at least `sz`.
+This can improve performance.
+"""
 Base.sizehint!(A::AbstractArray{T,N}, sz::NTuple{N,Any}) where {T,N} =
-    sizehint!(A, prod(_to_size(sz)))
+    sizehint!(A, _to_size(sz))
+Base.sizehint!(A::AbstractArray{T,N}, sz::Dims{N}) where {T,N} =
+    sizehint!(A, prod(sz))
+
+"""
+    Base.sizehint!(A::AbstractArray, nl::Integer)
+
+Suggest that array `A` reserve capacity for at least `nl` elements.
+This can improve performance.
+"""
 function Base.sizehint!(A::AbstractArray, nl::Integer)
     if isresizable(A)
         sizehint!(parent(A), nl)
@@ -88,7 +109,31 @@ function Base.sizehint!(A::AbstractArray, nl::Integer)
 end
 
 """
-    Base.resize!(A::AbstractArray{T,N}, sz)
+    resize_parent!(A::AbstractArray{T,N}, sz::NTuple{N})
+
+The same as `resize_parent!(A, prod(sz)`.
+"""
+@inline resize_parent!(A::AbstractArray{T,N}, sz::NTuple{N,Any}) where {T,N} =
+    resize_parent!(A, prod(_to_size(sz)))
+
+"""
+    resize_parent!(A::AbstractArray, nl::Integer)
+
+Resize the parent of A. This method will (and should only) be called by
+`resize_buffer!` or `resize_buffer_dim!`, the default implementation is
+`resize!(parent(A), nl)`, but for arrays with preserved space, this methods can
+be override to keep size of parent.
+"""
+resize_parent!(A::AbstractArray, nl::Integer) = resize_parent!(A, Int(nl))
+function resize_parent!(A::AbstractArray, nl::Int)
+    if parent_type(A) <: BufferType
+        resize!(parent(A), nl)
+    end
+    error("parent_type(A) must be BufferType")
+end
+
+"""
+    resize!(A::AbstractArray{T,N}, sz)
 
 Resize `A` to `sz`. `sz` can be a tuple of integer or Colon or iterator.
 """
@@ -109,13 +154,13 @@ end
 """
     resize_buffer!(A::AbstractArray, nsz...)
 
-Implementation of `resize!(A, nsz)` where `perent(A)` is a `Vector`.
+Implementation of `resize!(A, nsz)` where `perent(A)` is [`BufferType`](@ref).
 """
 resize_buffer!
 # resize vector will not move any element
 function resize_buffer!(A::AbstractVector{T}, n::Int) where {T}
     checksize(A, (n,))
-    resize!(parent(A), n) # resize! buffer by Base.resize!
+    resize_parent!(A, n) # resize! buffer by Base.resize!
     setsize!(A, 1, n)
     return A
 end
@@ -125,7 +170,7 @@ function resize_buffer!(A::AbstractArray{T,N}, nsz::Vararg{Int,N}) where {T,N}
     sz = size(A)
     nsz == sz && return A # if sz not change
     if nsz[1:N-1] == sz[1:N-1] # if only last dim changed
-        resize!(parent(A), prod(nsz))
+        resize_parent!(A, nsz)
         setsize!(A, N, nsz[N])
         return A
     end
@@ -138,7 +183,7 @@ function resize_buffer!(A::AbstractArray{T,N}, nsz::Vararg{Int,N}) where {T,N}
         copy(A)
     end
     # step 2: resize A for enough capacity
-    resize!(parent(A), prod(nsz))
+    resize_parent!(A, nsz)
     setsize!(A, nsz)
     # step 3: get dst region of A
     dst = view(A, map(Base.OneTo, ssz)...)
@@ -153,7 +198,7 @@ function resize_buffer!(A::AbstractArray{T,N}, dims::Vararg{Dim,N}) where {T,N}
     if M == 1
         dims[N] > 0 || error("dimension(s) must be > 0")
         nlen = stride(A, N) * dims[N]
-        resize!(parent(A), nlen)
+        resize_parent!(A, nlen)
         setsize!(A, N, dims[N])
         return A
     end
@@ -180,7 +225,7 @@ function resize_buffer!(A::AbstractArray{T,N}, dims::Vararg{Dim,N}) where {T,N}
             )
         end
     end
-    resize!(parent(A), nlen)
+    resize_parent!(A, nlen)
     setsize!(A, nsz)
     if ssz_tail == nsz_tail
         copyto!(parent(A), cpy)
@@ -206,13 +251,13 @@ function resize_buffer!(A::AbstractArray{T,N}, inds::Vararg{Any,N}) where {T,N}
     nsz = _to_size(inds)
     nlen = prod(nsz)
     copyto!(parent(A), A[inds...])
-    resize!(parent(A), nlen)
+    resize_parent!(A, nlen)
     setsize!(A, nsz)
     return A
 end
 
 """
-    Base.resize!(A::AbstractArray{T,N}, d::Integer, I)
+    resize!(A::AbstractArray{T,N}, d::Integer, I)
 
 Resize the `d`th dimension to `I`, where `I` can be an integer or a colon or an iterator.
 """
@@ -234,7 +279,7 @@ Base.resize!(A::AbstractArray, ::Integer, ::Colon) = A
 """
     resize_buffer_dim!(A::AbstractArray, d::Int, I) 
 
-Implementation of `resize!(A, d, I)` where `perent(A)` is a `Vector`.
+Implementation of `resize!(A, d, I)` where `perent(A)` is a [`BufferType`](@ref).
 """
 resize_buffer_dim!
 
@@ -242,7 +287,7 @@ function resize_buffer_dim!(A::AbstractArray, d::Int, n::Int)
     N = ndims(A)
     n == size(A, d) && return A
     if d == N
-        resize!(parent(A), stride(A, N) * n)
+        resize_parent!(A, stride(A, N) * n)
         setsize!(A, N, n)
         return A
     end
@@ -258,7 +303,7 @@ function resize_buffer_dim!(A::AbstractArray, d::Int, n::Int)
         copyto!(cpy, doffs, parent(A), soffs, sbatch_len)
         δ = δ + blk_len * (n - blk_num)
     end
-    resize!(parent(A), nlen)
+    resize_parent!(A, nlen)
     setsize!(A, d, n)
     copyto!(parent(A), cpy)
     return A
@@ -283,7 +328,7 @@ function resize_buffer_dim!(A::AbstractArray, d::Int, I::Base.LogicalIndex)
             end
         end
     end
-    resize!(parent(A), nlen)
+    resize_parent!(A, nlen)
     setsize!(A, d, n)
     copyto!(parent(A), cpy)
     return A
@@ -309,7 +354,7 @@ function resize_buffer_dim!(A::AbstractArray, d::Int, I::AbstractVector)
             end
         end
     end
-    resize!(parent(A), nlen)
+    resize_parent!(A, nlen)
     setsize!(A, d, n)
     copyto!(parent(A), cpy)
     return A
@@ -334,10 +379,11 @@ _accumulate_rec(f, op, init, item) = (init, op(init, f(item)))
 _accumulate_rec(f, op, init, item, items...) =
     (init, _accumulate_rec(f, op, op(init, f(item)), items...)...)
 
-_to_indices(::AbstractArray, dims, ::True) = dims
-_to_indices(A::AbstractArray, dims, ::False) = to_indices(A, dims)
+@inline _to_indices(::AbstractArray, dims, ::True) = dims
+@inline _to_indices(A::AbstractArray, dims, ::False) = to_indices(A, dims)
 
 _to_size(inds::Tuple) = map(_to_size, inds)
+_to_size(inds::Dims) = inds
 _to_size(ind) = length(ind)
 _to_size(ind::Integer) = Int(ind)
 

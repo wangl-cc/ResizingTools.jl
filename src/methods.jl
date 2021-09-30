@@ -127,9 +127,9 @@ be override to keep size of parent.
 resize_parent!(A::AbstractArray, nl::Integer) = resize_parent!(A, Int(nl))
 function resize_parent!(A::AbstractArray, nl::Int)
     if parent_type(A) <: BufferType
-        resize!(parent(A), nl)
+        return resize!(parent(A), nl)
     end
-    error("parent_type(A) must be BufferType")
+    return error("parent_type(A) must be BufferType")
 end
 
 """

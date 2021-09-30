@@ -1,4 +1,4 @@
-# Resizing Interfaces
+# Interfaces
 
 ## Resizable Dense Array
 

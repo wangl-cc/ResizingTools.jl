@@ -42,46 +42,6 @@ to_parentinds(A::AdjOrTransAbsVec, (i, J)::Tuple) = (check_dimbounds(A, 1, i); (
 to_parentinds(::AdjOrTransAbsMat, (I, J)::Tuple) = (J, I)
 to_parentinds(::AdjOrTrans, i::Integer, I) = ifelse(i == 1, 2, 1), I
 
-# getsize
-"""
-    getsize(A::AbstractArray, [dim])
-
-Return the dimensions of `A` unlike `size` which may not return a
-`NTuple{N,Int}`. For a [`ResizableArray`](@ref), `convert(Tuple, getsize(A))`
-is the default implementation of `size(A)`.
-"""
-getsize(A::AbstractArray, d::Integer) = getsize(A, Int(d))
-getsize(A::AbstractArray, d::Int) = getsize(A)[d]
-getsize(A::AbstractArray) = throw_methoderror(getsize, A)
-
-# setsize!(A, sz)
-"""
-    setsize!(A::AbstractArray{T,N}, sz) where {T,N}
-
-Set the size of `A` to `sz`
-"""
-setsize!(A::AbstractArray{T,N}, sz::NTuple{N,Any}) where {T,N} =
-    setsize!(A, _to_size(sz))
-setsize!(A::AbstractArray{T,N}, ::Dims{N}) where {T,N} = A
-
-has_setsize(t) = has_setsize(typeof(t))
-has_setsize(::Type{<:AbstractArray}) = false
-
-# setsize!(A, d, i)
-"""
-    setsize!(A::AbstractArray, d::Integer, n)
-
-Set the `d`th dimension to `n`.
-"""
-setsize!(A::AbstractArray, d::Integer, n) = setsize!(A, Int(d), _to_size(n))
-function setsize!(A::AbstractArray, d::Int, n::Int)
-    if has_setsize(A)
-        return setsize!(A, setindex(size(A), d, n))
-    else
-        return A
-    end
-end
-
 # Base.sizehint!(A, sz)
 """
     sizehint!(A::AbstractArray{T,N}, sz::NTuple{N}) where {T,N}
@@ -382,11 +342,6 @@ _accumulate_rec(f, op, init, item, items...) =
 @inline _to_indices(::AbstractArray, dims, ::True) = dims
 @inline _to_indices(A::AbstractArray, dims, ::False) = to_indices(A, dims)
 
-_to_size(inds::Tuple) = map(_to_size, inds)
-_to_size(inds::Dims) = inds
-_to_size(ind) = length(ind)
-_to_size(ind::Integer) = Int(ind)
-
 function _blkinfo(A::AbstractArray, i::Integer)
     i <= ndims(A) || throw(ArgumentError("dim must less than ndims(A)"))
     blk_len = 1
@@ -407,8 +362,6 @@ checksize(A, sz::Dims) = checksize(Bool, A, sz) || error("dimension(s) must be >
 # checkbounds at dim d
 check_dimbounds(A::AbstractArray, d::Integer, I) =
     checkindex(Bool, axes(A, d), I) || throw_dimboundserror(A, d, I)
-
-setindex(A::NTuple{N,Any}, v, i::Int) where {N} = ntuple(j -> ifelse(j == i, v, A[j]), Val(N))
 
 # Exceptions
 struct MethodUndefindeError <: Exception

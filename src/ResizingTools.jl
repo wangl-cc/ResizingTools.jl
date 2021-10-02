@@ -5,10 +5,17 @@ using ArrayInterface: has_parent, parent_type
 using LinearAlgebra: AdjOrTrans, AdjOrTransAbsVec, AdjOrTransAbsMat
 using Static
 
-export SimpleRDArray, Size, getsize, set!, resize_buffer!, resize_buffer_dim!
+export NoneSize, Size, set!
+export resize_buffer!, resize_buffer_dim!
+export SimpleRDArray
 
-include("methods.jl")
-include("utils.jl")
-include("type.jl")
+# tools for define and access size
+include("size.jl")
+# core, defined sizehint! and resize! and related methods
+include("resize.jl")
+# some abstract type with some pre-defined methods
+include("abstract.jl")
+# some implementation of resizable array
+include("example/simplerdarray.jl")
 
 end # module

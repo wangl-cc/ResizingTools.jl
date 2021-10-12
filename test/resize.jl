@@ -30,18 +30,18 @@ ResizingTools.getsize(A::WarpedArray, d::Int) = ResizingTools.getsize(parent(A),
 ResizingTools.size_type(::Type{<:WarpedArray}) = NoneSize
 
 _geninds(A::AbstractArray, d::Integer, I) =
-    ntuple(i -> i == d ? _toinds(A, d, I) : axes(A, i), Val(ndims(A)))
+    ntuple(i -> i == d ? _to_inds(A, d, I) : axes(A, i), Val(ndims(A)))
 _geninds(A::AbstractArray, Is::Tuple) =
-    ntuple(i -> _toinds(A, i, Is[i]) , Val(ndims(A)))
+    ntuple(i -> _to_inds(A, i, Is[i]) , Val(ndims(A)))
 
-_toinds(::AbstractArray, d::Integer, itr) = itr
-_toinds(A::AbstractArray, d::Integer, ::Colon) = axes(A, d)
-_toinds(A::AbstractArray, d::Integer, n::Integer) = Base.OneTo(min(n, size(A, d)))
+_to_inds(::AbstractArray, d::Integer, itr) = itr
+_to_inds(A::AbstractArray, d::Integer, ::Colon) = axes(A, d)
+_to_inds(A::AbstractArray, d::Integer, n::Integer) = Base.OneTo(min(n, size(A, d)))
 
-_tosize(A::AbstractArray, Is::Tuple) = ntuple(i -> _tolen(A, i, Is[i]), Val(ndims(A)))
-_tolen(::AbstractArray, ::Integer, itr) = eltype(itr) <: Bool ? sum(itr) : length(itr)
-_tolen(::AbstractArray, ::Integer, n::Integer) = n
-_tolen(A::AbstractArray, d::Integer, ::Colon) = size(A, d)
+_to_size(A::AbstractArray, Is::Tuple) = ntuple(i -> _to_len(A, i, Is[i]), Val(ndims(A)))
+_to_len(::AbstractArray, ::Integer, itr) = eltype(itr) <: Bool ? sum(itr) : length(itr)
+_to_len(::AbstractArray, ::Integer, n::Integer) = n
+_to_len(A::AbstractArray, d::Integer, ::Colon) = size(A, d)
 
 struct NLoop{N,T} <: AbstractArray{Any,N}
     itr::T
@@ -59,7 +59,7 @@ function test_resize(f, g, A::AbstractArray{T,N}, dims, itrs, dnums=1:N; pre=ide
         resize!(tA, Is)
         inds = _geninds(fA, Is)
         @test tA[inds...] == fA[inds...]
-        @test size(tA) == _tosize(fA, Is)
+        @test size(tA) == _to_size(fA, Is)
     end
     @testset "resize!($(typeof(A)), $_Is)" for _Is in NLoop{N}(itrs)
         Is = pre(_Is)
@@ -68,7 +68,7 @@ function test_resize(f, g, A::AbstractArray{T,N}, dims, itrs, dnums=1:N; pre=ide
         resize!(tA, Is)
         inds = _geninds(fA, Is)
         @test tA == fA[inds...]
-        @test size(tA) == _tosize(fA, Is)
+        @test size(tA) == _to_size(fA, Is)
     end
     @testset "resize!($(typeof(A)), $d, $I)" for d in dnums, I in dims
         tA = g(f(A))
@@ -76,7 +76,7 @@ function test_resize(f, g, A::AbstractArray{T,N}, dims, itrs, dnums=1:N; pre=ide
         resize!(tA, d, I)
         inds = _geninds(fA, d, I)
         @test tA[inds...] == fA[inds...]
-        @test size(tA, d) == _tolen(fA, d, I)
+        @test size(tA, d) == _to_len(fA, d, I)
     end
     @testset "resize!($(typeof(A)), $d, $I)" for d in dnums, I in itrs
         tA = g(f(A))
@@ -84,7 +84,7 @@ function test_resize(f, g, A::AbstractArray{T,N}, dims, itrs, dnums=1:N; pre=ide
         resize!(tA, d, I)
         inds = _geninds(fA, d, I)
         @test tA == fA[inds...]
-        @test size(tA, d) == _tolen(fA, d, I)
+        @test size(tA, d) == _to_len(fA, d, I)
     end
 end
 test_resize(g, A::AbstractArray{T,N}, dims, itrs, dnums=1:N; pre=identity) where {T,N} =

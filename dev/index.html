@@ -5,35 +5,36 @@
  3  6  9</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; RM = SimpleRDArray(M)</code><code class="nohighlight hljs ansi" style="display:block;">3×3 SimpleRDArray{Int64, 2}:
  1  4  7
  2  5  8
- 3  6  9</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; M == RM</code><code class="nohighlight hljs ansi" style="display:block;">true</code></pre><p>Once a <code>SimpleRDArray</code> is created, you can almost do anything with which likes a normal <code>Array</code> with similar performance:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; using BenchmarkTools</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; @benchmark $RM * $RM</code><code class="nohighlight hljs ansi" style="display:block;">BenchmarkTools.Trial: 10000 samples with 980 evaluations.
- Range (min … max):   58.163 ns …   9.022 μs  ┊ GC (min … max): 0.00% … 0.00%
- Time  (median):      83.366 ns               ┊ GC (median):    0.00%
- Time  (mean ± σ):   100.972 ns ± 140.883 ns  ┊ GC (mean ± σ):  5.74% ± 5.52%
+ 3  6  9</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; M == RM</code><code class="nohighlight hljs ansi" style="display:block;">true</code></pre><p>Once a <code>SimpleRDArray</code> is created, you can almost do anything with which likes a normal <code>Array</code> with similar performance:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; using BenchmarkTools</code><code class="nohighlight hljs ansi" style="display:block;"></code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; @benchmark $RM * $RM</code><code class="nohighlight hljs ansi" style="display:block;">BenchmarkTools.Trial: 10000 samples with 983 evaluations.
+ Range (min … max):  62.360 ns …  1.929 μs  ┊ GC (min … max): 0.00% … 95.45%
+ Time  (median):     84.028 ns              ┊ GC (median):    0.00%
+ Time  (mean ± σ):   94.324 ns ± 94.365 ns  ┊ GC (mean ± σ):  5.52% ±  5.50%
 
-     ▂▄▆██▇▆▅▅▅▅▅▄▄▃▃▃▃▃▂▂▁▂▁▁▁  ▁                              ▂
-  ▇▆▇██████████████████████████████▇██▇▇▆▇▇█▇▇▅▅▄▅▆▆▆▅▅▃▅▅▆▄▄▃▂ █
-  58.2 ns       Histogram: log(frequency) by time        234 ns &lt;
+      ▁▂▄▆▇██▇▆▅▄▅▅▄▃▂▂▂▂▁                ▁▁▁                 ▃
+  ▅▅▇██████████████████████▇▇▇▄▄▅▅▄▇▇▆▇▆▇████▇▇▇▇▇▇▅▆▆▅▆▅▅▁▄▆ █
+  62.4 ns      Histogram: log(frequency) by time       183 ns &lt;
 
- Memory estimate: 160 bytes, allocs estimate: 1.</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; @benchmark $M * $M</code><code class="nohighlight hljs ansi" style="display:block;">BenchmarkTools.Trial: 10000 samples with 986 evaluations.
- Range (min … max):  48.986 ns …  12.588 μs  ┊ GC (min … max): 0.00% … 99.32%
- Time  (median):     78.499 ns               ┊ GC (median):    0.00%
- Time  (mean ± σ):   96.589 ns ± 180.383 ns  ┊ GC (mean ± σ):  8.26% ±  5.56%
+ Memory estimate: 160 bytes, allocs estimate: 1.</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; @benchmark $M * $M</code><code class="nohighlight hljs ansi" style="display:block;">BenchmarkTools.Trial: 10000 samples with 984 evaluations.
+ Range (min … max):  58.943 ns …   2.688 μs  ┊ GC (min … max): 0.00% … 0.00%
+ Time  (median):     78.659 ns               ┊ GC (median):    0.00%
+ Time  (mean ± σ):   88.555 ns ± 105.128 ns  ┊ GC (mean ± σ):  6.57% ± 5.55%
 
-          ▆█▆▁
-  ▂▂▂▂▂▃▄█████▆▆▅▆▅▅▄▃▃▃▃▃▃▃▃▃▃▃▃▃▃▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▂▁▂ ▃
-  49 ns           Histogram: frequency by time          210 ns &lt;
+      ▂▃▄▅▇███▇▅▃▄▄▄▂▂▁▁ ▁                      ▁▂▁            ▂
+  ▃▇▆▆██████████████████████▇▆▆▆▆▅▃▄▄▄▃▄▃▃▅▄▄▅▆████▇▇▅▅▅▆▃▃▄▄▂ █
+  58.9 ns       Histogram: log(frequency) by time       166 ns &lt;
 
  Memory estimate: 160 bytes, allocs estimate: 1.</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; RM * RM == M * M</code><code class="nohighlight hljs ansi" style="display:block;">true</code></pre><p>Besides, a <code>SimpleRDArray</code> can be resized in many ways:</p><pre><code class="language-julia-repl hljs" style="display:block;">julia&gt; resize!(RM, (4, 4)) # resize RM to 4 * 4</code><code class="nohighlight hljs ansi" style="display:block;">4×4 SimpleRDArray{Int64, 2}:
- 1  4                7  139689318163216
- 2  5                8  139689318163296
- 3  6                9  139689297134736
- 4  8  139689318163136  139689318163376</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; RM[1:3,1:3] == M</code><code class="nohighlight hljs ansi" style="display:block;">true</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; resize!(RM, 3, 2) # resize the 2nd dimension of RM to 3</code><code class="nohighlight hljs ansi" style="display:block;">ERROR: ArgumentError: dim must less than ndims(A)</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; RM[4, :] .= 0</code><code class="nohighlight hljs ansi" style="display:block;">4-element view(::SimpleRDArray{Int64, 2}, 4, :) with eltype Int64:
+ 1  4   7   81
+ 2  5   8   96
+ 3  6   9  102
+ 4  8  66  126</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; RM[1:3,1:3] == M</code><code class="nohighlight hljs ansi" style="display:block;">true</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; resize!(RM, 2, 3) # resize the 2nd dimension of RM to 3</code><code class="nohighlight hljs ansi" style="display:block;">4×3 SimpleRDArray{Int64, 2}:
+ 1  4   7
+ 2  5   8
+ 3  6   9
+ 4  8  66</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; RM[4, :] .= 0</code><code class="nohighlight hljs ansi" style="display:block;">3-element view(::SimpleRDArray{Int64, 2}, 4, :) with eltype Int64:
  0
  0
- 0
- 0</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; resize!(RM, Bool[1, 1, 0, 1], 1) # delete RM[3, :]</code><code class="nohighlight hljs ansi" style="display:block;">ERROR: MethodError: no method matching resize!(::SimpleRDArray{Int64, 2}, ::Vector{Bool}, ::Int64)
-Closest candidates are:
-  resize!(::AbstractArray, !Matched::Integer, ::Any) at /home/runner/work/ResizingTools.jl/ResizingTools.jl/src/resize.jl:224
-  resize!(::AbstractArray{T, N}, !Matched::Tuple{Vararg{Any, N}}, ::B) where {T, N, B} at /home/runner/work/ResizingTools.jl/ResizingTools.jl/src/resize.jl:100
-  resize!(::AbstractArray, !Matched::Integer, !Matched::Colon) at /home/runner/work/ResizingTools.jl/ResizingTools.jl/src/resize.jl:237
-  ...</code></pre></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="manual/">Manual »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.7 on <span class="colophon-date" title="Tuesday 12 October 2021 14:34">Tuesday 12 October 2021</span>. Using Julia version 1.6.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>
+ 0</code><br/><code class="language-julia-repl hljs" style="display:block;">julia&gt; resize!(RM, 1, Bool[1, 1, 0, 1]) # delete at index 3 at 1st dimension</code><code class="nohighlight hljs ansi" style="display:block;">3×3 SimpleRDArray{Int64, 2}:
+ 1  4  7
+ 2  5  8
+ 0  0  0</code></pre></article><nav class="docs-footer"><a class="docs-footer-nextpage" href="manual/">Manual »</a><div class="flexbox-break"></div><p class="footer-message">Powered by <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> and the <a href="https://julialang.org/">Julia Programming Language</a>.</p></nav></div><div class="modal" id="documenter-settings"><div class="modal-background"></div><div class="modal-card"><header class="modal-card-head"><p class="modal-card-title">Settings</p><button class="delete"></button></header><section class="modal-card-body"><p><label class="label">Theme</label><div class="select"><select id="documenter-themepicker"><option value="documenter-light">documenter-light</option><option value="documenter-dark">documenter-dark</option></select></div></p><hr/><p>This document was generated with <a href="https://github.com/JuliaDocs/Documenter.jl">Documenter.jl</a> version 0.27.7 on <span class="colophon-date" title="Tuesday 12 October 2021 14:44">Tuesday 12 October 2021</span>. Using Julia version 1.6.3.</p></section><footer class="modal-card-foot"></footer></div></div></div></body></html>

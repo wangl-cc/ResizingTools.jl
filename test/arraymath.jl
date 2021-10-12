@@ -32,7 +32,7 @@ end
     end
 end
 
-@testset "Linear Tlgebra: $f" for f in (transpose, adjoint)
+@testset "Linear Algebra: $f" for f in (transpose, adjoint)
     @eval @test $f(tV) == $f(V)
     @eval @test $f(tM) == $f(M)
     for bf in (:+, :-)
@@ -49,7 +49,7 @@ end
     end
 end
 
-@testset "Linear Tlgebra: M $f V and M $f M" for f in (:*, :\)
+@testset "Linear Algebra: M $f V and M $f M" for f in (:*, :\)
     @eval begin
         @test $f(tM, tV) == $f(tM, V) == $f(M, tV) == $f(M, V)
         @test $f(tM, tM) == $f(tM, M) == $f(M, tM) == $f(M, M)

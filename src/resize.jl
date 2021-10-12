@@ -25,16 +25,16 @@ _isresizable(::True, ::Type{<:BitVector}) = true
 _isresizable(::False, ::Type) = false
 
 """
-    toparentinds(A::AbstractArray, Is::Tuple) -> Is′
+    to_parentinds(A::AbstractArray, Is::Tuple) -> Is′
 
 Convert the index(s) `Is` of `A` to index(s) `Is′` of `parent(A)`.
 """
 to_parentinds(::AbstractArray, Is::Tuple) = Is
 """
-    toparentinds(A::AbstractArray, i::Integer, I) -> (i′, I′)
+    to_parentinds(A::AbstractArray, i::Integer, I) -> (i′, I′)
 
 Convert the index(s) `I` at `d`th dimension of `A` to index(s) `I′` at `d′`th
-dimentsion of `parent(A)`.
+dimension of `parent(A)`.
 """
 to_parentinds(::AbstractArray, d::Integer, I) = Int(d), I
 # impl of adjoint and transpose
@@ -114,7 +114,7 @@ end
 """
     resize_buffer!(A::AbstractArray, nsz...)
 
-Implementation of `resize!(A, nsz)` where `perent(A)` is [`BufferType`](@ref).
+Implementation of `resize!(A, nsz)` where `parent(A)` is [`BufferType`](@ref).
 """
 resize_buffer!
 # resize vector will not move any element
@@ -239,7 +239,7 @@ Base.resize!(A::AbstractArray, ::Integer, ::Colon) = A
 """
     resize_buffer_dim!(A::AbstractArray, d::Int, I) 
 
-Implementation of `resize!(A, d, I)` where `perent(A)` is a [`BufferType`](@ref).
+Implementation of `resize!(A, d, I)` where `parent(A)` is a [`BufferType`](@ref).
 """
 resize_buffer_dim!
 
@@ -364,15 +364,15 @@ check_dimbounds(A::AbstractArray, d::Integer, I) =
     checkindex(Bool, axes(A, d), I) || throw_dimboundserror(A, d, I)
 
 # Exceptions
-struct MethodUndefindeError <: Exception
+struct MethodUndefineError <: Exception
     f::Any
     T::DataType
 end
-Base.showerror(io::IO, err::MethodUndefindeError) =
-    print(io, "MethodUndefindeError: ", err.f, " is not defined for ", err.T)
+Base.showerror(io::IO, err::MethodUndefineError) =
+    print(io, "MethodUndefineError: ", err.f, " is not defined for ", err.T)
 
 throw_methoderror(f, A::AbstractArray{N}) where {N} =
-    throw(MethodUndefindeError(f, typeof(A)))
+    throw(MethodUndefineError(f, typeof(A)))
 
 struct DimBoundsError <: Exception
     A::AbstractArray

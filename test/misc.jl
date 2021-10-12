@@ -5,10 +5,10 @@
     @test size(tV, 0x2) == 1
 end
 
-@testset "unresizable arrays" begin
-    @test_throws MethodUndefindeError sizehint!(1:2, 3)
-    @test_throws MethodUndefindeError resize!(1:2, (3,))
-    @test_throws MethodUndefindeError resize!(1:2, 3, 1)
+@testset "non-resizable arrays" begin
+    @test_throws MethodUndefineError sizehint!(1:2, 3)
+    @test_throws MethodUndefineError resize!(1:2, (3,))
+    @test_throws MethodUndefineError resize!(1:2, 3, 1)
 end
 
 @testset "wrong index" begin

@@ -5,7 +5,7 @@ using ArrayInterface: has_parent, parent_type
 using LinearAlgebra: AdjOrTrans, AdjOrTransAbsVec, AdjOrTransAbsMat
 using Static
 
-export NoneSize, Size, set!
+export Size, set!
 export resize_buffer!, resize_buffer_dim!
 export SimpleRDArray
 

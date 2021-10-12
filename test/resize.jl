@@ -27,7 +27,6 @@ Base.@propagate_inbounds Base.getindex(A::WarpedArray, Is...) = parent(A)[Is...]
 Base.@propagate_inbounds Base.setindex!(A::WarpedArray, v, Is...) = parent(A)[Is...] = v
 ResizingTools.getsize(A::WarpedArray) = ResizingTools.getsize(parent(A))
 ResizingTools.getsize(A::WarpedArray, d::Int) = ResizingTools.getsize(parent(A), d)
-ResizingTools.size_type(::Type{<:WarpedArray}) = NoneSize
 
 _geninds(A::AbstractArray, d::Integer, I) =
     ntuple(i -> i == d ? _to_inds(A, d, I) : axes(A, i), Val(ndims(A)))

@@ -1,32 +1,26 @@
 """
-    AbstractSize
+    AbstractSize{N}
 
-Supertype for array sizes. See the interface section for more information.
+Supertype for all array sizes.
 """
-abstract type AbstractSize end
+abstract type AbstractSize{N} end
 
-const SizeType = Union{AbstractSize, Dims}
-
-"""
-    NoneSize <: AbstractSize
-
-Size type for arrays without specific size property.
-"""
-struct NoneSize <: AbstractSize end
+const SizeType{N} = Union{AbstractSize{N}, Dims{N}}
 
 """
     Size{N} <: AbstractSize{N}
 
-Size type for resizable arrays, which is a mutable warpper of `NTuple{N,Int}` to
-represent the dimension of an resizable array. Mutate 'd'th dimension to `n` by
+Size type for resizable arrays, which is a mutable wrapper of `Dims{N}` to
+represent the dimension of an resizable array. Mutate `d`th dimension to `n` by
 `sz[d] = n` mutate the whole dimensions to `nsz` by `set!(sz, nsz)`.
 """
-mutable struct Size{N} <: AbstractSize
-    sz::NTuple{N,Int}
+mutable struct Size{N} <: AbstractSize{N}
+    sz::Dims{N}
 end
 @inline Size(I::Int...) = Size(I)
 @inline Size(A::AbstractArray) = Size(size(A))
 
+# use SizeOrTuple instead of SizeType{N} to avoid override the methods for tuple
 const SizeOrTuple = Union{Size,Tuple}
 _totuple(sz::Size) = sz.sz
 _totuple(tp::Tuple) = tp
@@ -39,7 +33,7 @@ set!(sz::Size{2}, nsz::NTuple{2,Int}) = (sz[1] = nsz[1]; sz[2] = nsz[2]; sz)
 set!(sz::Size{3}, nsz::NTuple{3,Int}) = (sz[1] = nsz[1]; sz[2] = nsz[2]; sz[3] = nsz[3]; sz)
 set!(sz::Size{N}, nsz::NTuple{N,Int}) where {N} = sz.sz = nsz
 
-# The below two methods is a modifaction of `MArray` in `StaticArrays.jl`
+# The below two methods is a modification of `MArray` in `StaticArrays.jl`
 # https://github.com/JuliaArrays/StaticArrays.jl/blob/master/src/MArray.jl#L80
 function Base.getindex(sz::Size{N}, i::Int) where {N}
     @boundscheck 1 <= i <= N || throw(BoundsError(sz, i))
@@ -78,7 +72,7 @@ Get the size type of `A`, determine the methods of `setsize!`. The default
 `size_type` is `NoneSize`, which means `setsize!` will "do nothing".
 """
 size_type(A::AbstractArray) = size_type(typeof(A))
-size_type(::Type{<:AbstractArray}) = NoneSize
+size_type(::Type{T}) where {T<:AbstractArray} = Dims{ndims(T)}
 
 # setsize!(A, sz)
 """
@@ -89,10 +83,9 @@ Set the size of `A` to `sz`.
 setsize!(A::AbstractArray{T,N}, sz::NTuple{N,Any}) where {T,N} =
     setsize!(size_type(A), A, _to_size(sz))
 
-@inline setsize!(::Type{S}, A::AbstractArray, ::Dims{N}) where {S<:NoneSize,N} = A
-# setsize!(::Type{S}, A::AbstractArray{T,N}, ::Dims{N}) where {T,N,S<:Dims{N}} (by user)
+@inline setsize!(::Type{S}, A::AbstractArray, ::Dims{N}) where {N,S<:Dims{N}} = A
 @inline setsize!(::Type{S}, A::AbstractArray{T,N}, sz::Dims{N}) where {T,N,S<:Size{N}} =
-    (set!(getsize(A), sz); A)
+    (set!(getsize(A)::S, sz); A)
 
 # setsize!(A, d, i)
 """
@@ -103,11 +96,9 @@ Set the `d`th dimension to `n`.
 Base.@propagate_inbounds setsize!(A::AbstractArray, d::Integer, n) =
     setsize!(size_type(A), A, Int(d), _to_size(n))
 
-@inline setsize!(::Type{S}, A::AbstractArray, ::Int, ::Int) where {S<:NoneSize} = A
-@inline setsize!(::Type{S}, A::AbstractArray{T,N}, d::Int, n::Int) where {T,N,S<:Dims{N}} =
-    setsize!(S, A, setindex(getsize(A), n, d))
+@inline setsize!(::Type{S}, A::AbstractArray, ::Int, ::Int) where {S<:Dims} = A
 setsize!(::Type{S}, A::AbstractArray{T,N}, d::Int, n::Int) where {T,N,S<:Size{N}} =
-    (Base.@_propagate_inbounds_meta; getsize(A)[d] = n; A) # meta to aviod too long line
+    (Base.@_propagate_inbounds_meta; getsize(A)[d] = n; A) # meta to avoid too long line
 
 @inline setindex(A::Tuple, v, i::Int) = ntuple(j -> ifelse(j == i, v, A[j]), Val(length(A)))
 

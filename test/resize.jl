@@ -103,7 +103,7 @@ adjIS(I) = length(I) == 1 ? (1, I[1]) : I
     test_resize(adjoint, SimpleRDArray, M, DIMS, ITRS)
 end
 
-@testset "sizehit!: $f" for f in (SimpleRDArray, warpsimplerdarray)
+@testset "sizehint!: $f" for f in (SimpleRDArray, warpsimplerdarray)
     @testset "Vector" begin
         @test begin
             tV = f(V)

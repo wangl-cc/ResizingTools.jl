@@ -4,6 +4,7 @@
 [![codecov](https://codecov.io/gh/wangl-cc/ResizingTools.jl/branch/master/graph/badge.svg)](https://codecov.io/gh/wangl-cc/ResizingTools.jl)
 [![GitHub](https://img.shields.io/github/license/wangl-cc/ResizingTools.jl)](https://github.com/wangl-cc/ResizingTools.jl/blob/master/LICENSE)
 [![Docs dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://wangl-cc.github.io/ResizingTools.jl/dev/)
+[![Docs stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://wangl-cc.github.io/ResizingTools.jl/stable/)
 
 `ResizingTools` helps you create a `Array` type, which can be resized at each dimension.
 
@@ -72,7 +73,7 @@ julia> resize!(RM, (4, 4)) # resize RM to 4 * 4
 
 julia> RM[1:3,1:3] == M
 true
-julia> resize!(RM, 3, 2) # resize the 2nd dimension of RM to 3
+julia> resize!(RM, 2, 3) # resize the 2nd dimension of RM to 3
 4×3 SimpleRDArray{Int64, 2}:
  1  4   7
  2  5   8
@@ -85,7 +86,7 @@ julia> RM[4, :] .= 0
  0
  0
 
-julia> resize!(RM, Bool[1, 1, 0, 1], 1) # delete RM[3, :]
+julia> resize!(RM, 1, Bool[1, 1, 0, 1]) # delete RM[3, :]
 3×3 SimpleRDArray{Int64, 2}:
  1  4  7
  2  5  8
@@ -95,4 +96,6 @@ julia> resize!(RM, Bool[1, 1, 0, 1], 1) # delete RM[3, :]
 ## Make your own array resizable
 
 To make your own resizable array, you only need is defined some interface
-methods, see [docs](https://wangl-cc.github.io/ResizingTools.jl/dev/interfaces) for details.
+methods, see
+[docs](https://wangl-cc.github.io/ResizingTools.jl/dev/manual/#Interfaces) for
+details.

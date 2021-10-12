@@ -31,7 +31,7 @@ Besides, a `SimpleRDArray` can be resized in many ways:
 ```@repl get-start
 resize!(RM, (4, 4)) # resize RM to 4 * 4
 RM[1:3,1:3] == M
-resize!(RM, 3, 2) # resize the 2nd dimension of RM to 3
+resize!(RM, 2, 3) # resize the 2nd dimension of RM to 3
 RM[4, :] .= 0
-resize!(RM, Bool[1, 1, 0, 1], 1) # delete RM[3, :]
+resize!(RM, 1, Bool[1, 1, 0, 1]) # delete at index 3 at 1st dimension
 ```

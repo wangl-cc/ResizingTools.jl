@@ -28,8 +28,6 @@ This packages provide methods `Base.sizehint!` for `AbstractArray`. You can
 which suggest that `A` reserve capacity for at least `n`. Besides, for
 multi-dimensional arrays, `sizehint!(A, sz::NTuple)` is also a convenient way
 which suggests that array `A` reserve capacity for at least `prod(sz)` elements.
-Besides, for non-dense arrays, you can override `sizehint!(A, sz::Dims{N})` to
-more complicate `sizehint!`.
 
 ### [`resize!`](@id manual-methods-resize)
 
@@ -44,4 +42,43 @@ multi-dimensional arrays. There are two form of `resize!`:
 There are many interface methods for resizing arrays, most of which depends on
 `parent(A)` and related methods like `parent_type`, `resize_parent!`, etc.
 
-More about interface, see [interfaces](@ref Interfaces).
+## Interfaces
+
+To create a resizable array type, there are some methods required besides of the
+[interface of `AbstractArray`](https://docs.julialang.org/en/v1/manual/interfaces/#man-interface-array).
+
+### [Parent](@id manual-interface-parent)
+
+A resizable array type must contain a parent storing data. Thus,
+`Base.parent(A::AbstractArray):` which returns the array storing data and
+`ArrayInterface.parent_type(::Type{T})` which returns the type of parent must be
+defined. Resizing methods like `sizehint!` and `resize!` will effect though 
+parent.
+
+### [Size](@id manual-interface-size)
+
+Besides, there are also some methods to access and mutate the size of array.
+The most important methods are `ResizingTools.getsize(A)` which returns the size
+of `A` and `ResizingTools.size_type(::Type{T})`, which returns the type of
+`getsize(A)` and determine the default methods of [`setsize!`](@ref).
+
+There are two available size types now:
+
+* [`Dims`](@ref): the normal size type array, and is the default methods. In
+  this case the `setsize!` will not change anything,
+* [`Size`](@ref): a mutable wrapper of `Dims{N}` with `setindex!` and
+  [`set!`](@ref). In this case, `setsize!(A, sz)` will call
+  `set!(getsize(A), sz)` and `setsize(A, d, i)` will call `getsize(A)[d] = i`.
+
+However, if the size of array is a mutable field of `Dims`,
+`setsize(::Type{S}, A::AbstractArray, sz::Dims{N})` and
+`setsize(::Type{S}, A::AbstractArray, d::Int, i::Int)` where `S <: Dims`  must
+be defined to mutate the size of array.
+
+### Index transform
+
+In some case, the index of `A` can't be convert to index of its parent, such as 
+`A'` for which `A[i, j]' == A'[j, i]`. Thus, in these cases, the index of `A`
+must be transformed. Define [`ResizingTools.to_parentinds`](@ref) to do this.
+
+### Example

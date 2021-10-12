@@ -1,7 +1,7 @@
 using Test
 using ArrayInterface
 using ResizingTools
-using ResizingTools: MethodUndefindeError, DimBoundsError,tailn
+using ResizingTools: MethodUndefineError, DimBoundsError,tailn
 using Aqua
 
 const V = rand(3)

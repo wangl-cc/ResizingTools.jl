@@ -20,8 +20,8 @@
   `Base.elsize(ArrayInterface.parent_type(A))`.
 
 !!! warning
-
-   `parent_type(::Type{<:AbstractRDArray})` must be a type with above methods.
+    
+    `parent_type(::Type{<:AbstractRDArray})` must be a type with above methods.
 
 ## Resizing Methods
 

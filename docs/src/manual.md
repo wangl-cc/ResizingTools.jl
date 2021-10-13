@@ -60,14 +60,14 @@ parent.
 Besides, there are also some methods to access and mutate the size of array.
 The most important methods are `ResizingTools.getsize(A)` which returns the size
 of `A` and `ResizingTools.size_type(::Type{T})`, which returns the type of
-`getsize(A)` and determine the default methods of [`setsize!`](@ref ResizingTools.setsize!).
+`getsize(A)` and determine the default methods of [`setsize!`](@ref).
 
 There are two available size types now:
 
 * `Dims`: `NTuple` of `Int`s, the normal size type array, and is the default methods. In
   this case the `setsize!` will not change anything,
 * [`Size`](@ref): a mutable wrapper of `Dims{N}` with `setindex!` and
-  [`set!`](@ref ResizingTools.set!). In this case, `setsize!(A, sz)` will call
+  [`set!`](@ref). In this case, `setsize!(A, sz)` will call
   `set!(getsize(A), sz)` and `setsize(A, d, i)` will call `getsize(A)[d] = i`.
 
 However, if the size of array is a mutable field of `Dims`,

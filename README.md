@@ -6,7 +6,7 @@
 [![Docs dev](https://img.shields.io/badge/docs-dev-blue.svg)](https://wangl-cc.github.io/ResizingTools.jl/dev/)
 [![Docs stable](https://img.shields.io/badge/docs-stable-blue.svg)](https://wangl-cc.github.io/ResizingTools.jl/stable/)
 
-`ResizingTools` helps you create a `Array` type, which can be resized at each dimension.
+`ResizingTools` helps you create resizable `Array` types.
 
 ## Get started with `SimpleRDArray`
 

@@ -15,9 +15,13 @@
 `DenseArray` with some predefined methods:
 
 * `Base.unsafe_convert(::Ptr{T}, A::AbstractRDArray) where {T}`: return
-  `Base.unsafe_convert(Ptr{T}, parent(A))
+  `Base.unsafe_convert(Ptr{T}, parent(A)),
 * `Base.elsize(::Type{T}) where {T<:AbstractRDArray}`: return
-  `Base.elsize(ArrayInterface.parent_type(A))`
+  `Base.elsize(ArrayInterface.parent_type(A))`.
+
+!!! warning
+
+   `parent_type(::Type{<:AbstractRDArray})` must be a type with above methods.
 
 ## Resizing Methods
 
@@ -82,3 +86,5 @@ In some case, the index of `A` can't be convert to index of its parent, such as
 must be transformed. Define [`ResizingTools.to_parentinds`](@ref) to do this.
 
 ### Example
+
+See the implementation of [`SimpleRDArray`](@ref) for more details.

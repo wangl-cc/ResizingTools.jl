@@ -1,7 +1,7 @@
 name = "ResizingTools"
 uuid = "112dcb92-135b-4fff-bdeb-bacebdb79ec0"
 authors = ["Long Wang <wangl.cc@outlook.com>"]
-version = "0.1.0"
+version = "0.2.0"
 
 [deps]
 ArrayInterface = "4fba245c-0d91-5ea0-9b3e-6abc04ee57a9"

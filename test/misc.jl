@@ -28,7 +28,7 @@ end
 end
 
 @testset "Size" begin
-    tp = ntuple(identity, Val(4))
+    tp = ntuple(UInt, Val(4))
     sz = Size(4, 4, 4, 4)
     @test length(sz) == 4
     set!(sz, tp)

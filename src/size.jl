@@ -28,10 +28,10 @@ _totuple(tp::Tuple) = tp
 @inline Base.length(::Size{N}) where {N} = N
 @inline Base.convert(::Type{T}, sz::Size) where {T<:Tuple} = convert(T, sz.sz)
 @inline Base.:(==)(t1::SizeOrTuple, t2::SizeOrTuple) = _totuple(t1) == _totuple(t2)
-set!(sz::Size{1}, nsz::NTuple{1,Int}) = (sz[1] = nsz[1]; sz)
-set!(sz::Size{2}, nsz::NTuple{2,Int}) = (sz[1] = nsz[1]; sz[2] = nsz[2]; sz)
-set!(sz::Size{3}, nsz::NTuple{3,Int}) = (sz[1] = nsz[1]; sz[2] = nsz[2]; sz[3] = nsz[3]; sz)
-set!(sz::Size{N}, nsz::NTuple{N,Int}) where {N} = sz.sz = nsz
+set!(sz::Size{1}, nsz::Dims{1}) = (sz[1] = nsz[1]; sz)
+set!(sz::Size{2}, nsz::Dims{2}) = (sz[1] = nsz[1]; sz[2] = nsz[2]; sz)
+set!(sz::Size{3}, nsz::Dims{3}) = (sz[1] = nsz[1]; sz[2] = nsz[2]; sz[3] = nsz[3]; sz)
+set!(sz::Size{N}, nsz::Dims{N}) where {N} = sz.sz = nsz
 
 # The below two methods is a modification of `MArray` in `StaticArrays.jl`
 # https://github.com/JuliaArrays/StaticArrays.jl/blob/master/src/MArray.jl#L80

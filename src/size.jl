@@ -97,7 +97,7 @@ size_type(::Type{T}) where {T<:AbstractArray} = Dims{ndims(T)}
 Set the size of `A` to `sz`.
 """
 setsize!(A::AbstractArray{T,N}, sz::NTuple{N,Any}) where {T,N} =
-    setsize!(size_type(A), A, _to_size(sz))
+    setsize!(size_type(A), A, to_dims(sz))
 
 @inline setsize!(::Type{S}, A::AbstractArray, ::Dims{N}) where {N,S<:Dims{N}} = A
 @inline setsize!(::Type{S}, A::AbstractArray{T,N}, sz::Dims{N}) where {T,N,S<:Size{N}} =
@@ -110,7 +110,7 @@ setsize!(A::AbstractArray{T,N}, sz::NTuple{N,Any}) where {T,N} =
 Set the `d`th dimension to `n`.
 """
 Base.@propagate_inbounds setsize!(A::AbstractArray, d::Integer, n) =
-    setsize!(size_type(A), A, Int(d), _to_size(n))
+    setsize!(size_type(A), A, Int(d), to_dims(n))
 
 @inline setsize!(::Type{S}, A::AbstractArray, ::Int, ::Int) where {S<:Dims} = A
 setsize!(::Type{S}, A::AbstractArray{T,N}, d::Int, n::Int) where {T,N,S<:Size{N}} =
@@ -118,7 +118,18 @@ setsize!(::Type{S}, A::AbstractArray{T,N}, d::Int, n::Int) where {T,N,S<:Size{N}
 
 @inline setindex(A::Tuple, v, i::Int) = ntuple(j -> ifelse(j == i, v, A[j]), Val(length(A)))
 
-_to_size(inds::Tuple) = map(_to_size, inds)
-_to_size(inds::Dims) = inds
-_to_size(ind) = length(ind)
-_to_size(ind::Integer) = Int(ind)
+"""
+    to_dims(inds::Tuple) -> Dims
+
+Convert the given indices to `Dims`.
+
+!!! note
+
+    The given indices should be a return value of `to_indices`.
+    If `inds[i]` is an `Integer`, this function would converted it to `Int`;
+    If `inds[i]` is an `AbstractVector`, this function would return its length.
+"""
+to_dims(inds::Tuple) = map(to_dims, inds)::Dims
+to_dims(inds::Dims) = inds
+to_dims(ind::AbstractVector) = length(ind)::Int
+to_dims(ind::Integer) = Int(ind)

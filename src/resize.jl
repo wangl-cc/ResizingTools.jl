@@ -50,7 +50,7 @@ Suggest that array `A` reserve size for at least `sz`.
 This can improve performance.
 """
 Base.sizehint!(A::AbstractArray{T,N}, sz::NTuple{N,Any}) where {T,N} =
-    sizehint!(A, _to_size(sz))
+    sizehint!(A, to_dims(sz))
 Base.sizehint!(A::AbstractArray{T,N}, sz::Dims{N}) where {T,N} =
     sizehint!(A, prod(sz))
 
@@ -74,7 +74,7 @@ end
 The same as `resize_parent!(A, prod(sz)`.
 """
 @inline resize_parent!(A::AbstractArray{T,N}, sz::NTuple{N,Any}) where {T,N} =
-    resize_parent!(A, prod(_to_size(sz)))
+    resize_parent!(A, prod(to_dims(sz)))
 
 """
     resize_parent!(A::AbstractArray, nl::Integer)
@@ -162,7 +162,7 @@ function resize_buffer!(A::AbstractArray{T,N}, dims::Vararg{Dim,N}) where {T,N}
         setsize!(A, N, dims[N])
         return A
     end
-    nsz = _to_size(dims)
+    nsz = to_dims(dims)
     checksize(A, nsz)
     sz_tail = tailn(Val(M), size(A)...)
     nsz_tail = tailn(Val(M), nsz...)
@@ -208,7 +208,7 @@ resize_buffer!(A::AbstractArray{T,N}, ::Vararg{Base.Slice,N}) where {T,N} = A
 # _resize! with inds
 function resize_buffer!(A::AbstractArray{T,N}, inds::Vararg{Any,N}) where {T,N}
     @boundscheck checkbounds(A, inds...)
-    nsz = _to_size(inds)
+    nsz = to_dims(inds)
     nlen = prod(nsz)
     copyto!(parent(A), A[inds...])
     resize_parent!(A, nlen)

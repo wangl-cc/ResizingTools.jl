@@ -1,5 +1,6 @@
 const DIMS = (:, 0x2, 3, 4)
 const ITRS = (
+    DIMS...,
     1:1,
     1:2,
     1:3,
@@ -33,9 +34,11 @@ _geninds(A::AbstractArray, d::Integer, I) =
 _geninds(A::AbstractArray, Is::Tuple) =
     ntuple(i -> _to_inds(A, i, Is[i]) , Val(ndims(A)))
 
-_to_inds(::AbstractArray, d::Integer, itr) = itr
+_to_inds(::AbstractArray, d::Integer, itr) = Base.to_index(itr)
 _to_inds(A::AbstractArray, d::Integer, ::Colon) = axes(A, d)
 _to_inds(A::AbstractArray, d::Integer, n::Integer) = Base.OneTo(min(n, size(A, d)))
+
+_to_sinds(inds) = map(ind -> Base.OneTo(length(ind)), inds)
 
 _to_size(A::AbstractArray, Is::Tuple) = ntuple(i -> _to_len(A, i, Is[i]), Val(ndims(A)))
 _to_len(::AbstractArray, ::Integer, itr) = eltype(itr) <: Bool ? sum(itr) : length(itr)
@@ -51,38 +54,21 @@ Base.size(A::NLoop{N}) where {N} = ntuple(_ -> length(A.itr), Val(N))
 Base.getindex(A::NLoop{N}, is::Vararg{Int,N}) where {N} = ntuple(i -> A.itr[is[i]], Val(N))
 
 function test_resize(f, g, A::AbstractArray{T,N}, dims, itrs, dnums=1:N; pre=identity) where {T,N}
-    @testset "resize!($(typeof(A)), $_Is)" for _Is in NLoop{N}(dims)
-        Is = pre(_Is)
-        tA = f(g(A))
-        fA = f(A)
-        resize!(tA, Is)
-        inds = _geninds(fA, Is)
-        @test tA[inds...] == fA[inds...]
-        @test size(tA) == _to_size(fA, Is)
-    end
     @testset "resize!($(typeof(A)), $_Is)" for _Is in NLoop{N}(itrs)
         Is = pre(_Is)
         tA = g(f(A))
         fA = f(A)
         resize!(tA, Is)
         inds = _geninds(fA, Is)
-        @test tA == fA[inds...]
+        @test tA[_to_sinds(inds)...] == fA[inds...]
         @test size(tA) == _to_size(fA, Is)
-    end
-    @testset "resize!($(typeof(A)), $d, $I)" for d in dnums, I in dims
-        tA = g(f(A))
-        fA = f(A)
-        resize!(tA, d, I)
-        inds = _geninds(fA, d, I)
-        @test tA[inds...] == fA[inds...]
-        @test size(tA, d) == _to_len(fA, d, I)
     end
     @testset "resize!($(typeof(A)), $d, $I)" for d in dnums, I in itrs
         tA = g(f(A))
         fA = f(A)
         resize!(tA, d, I)
         inds = _geninds(fA, d, I)
-        @test tA == fA[inds...]
+        @test tA[_to_sinds(inds)...] == fA[inds...]
         @test size(tA, d) == _to_len(fA, d, I)
     end
 end
@@ -160,4 +146,10 @@ end
             @allocated resize!(tT, (4, 4, 4))
         end
     end
+end
+
+@testset "resize! with both Integer and AbstractArray #4" begin
+    tM = SimpleRDArray(reshape(1:4, 2, 2))
+    @test resize!(tM, (2, 1:2)) == reshape(1:4, 2, 2)
+    @test resize!(tM, (1:2, 1)) == reshape(1:2, 2, 1)
 end

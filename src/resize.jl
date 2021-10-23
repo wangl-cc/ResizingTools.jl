@@ -207,15 +207,20 @@ end
 resize_buffer!(A::AbstractArray{T,N}, ::Vararg{Base.Slice,N}) where {T,N} = A
 # _resize! with inds
 function resize_buffer!(A::AbstractArray{T,N}, inds::Vararg{Any,N}) where {T,N}
-    @boundscheck checkbounds(A, inds...)
-    nsz = to_dims(inds)
-
-    nlen = prod(nsz)
-    copyto!(parent(A), A[inds...])
+    sz = to_dims(inds)
+    nlen = prod(sz)
+    sinds = map(_to_sind, axes(A), inds)
+    src = A[sinds...]
     resize_parent!(A, nlen)
-    setsize!(A, nsz)
+    setsize!(A, sz)
+    dinds = map(_to_oneto, sinds)
+    A[dinds...] = src
     return A
 end
+
+_to_sind(ind, n::Integer) = n >= length(ind) ? UnitRange(ind) : UnitRange(ind[1:n])
+_to_sind(ind, I) = I
+_to_oneto(I) = Base.OneTo(length(I))
 
 """
     resize!(A::AbstractArray{T,N}, d::Integer, I)

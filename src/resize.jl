@@ -209,6 +209,7 @@ resize_buffer!(A::AbstractArray{T,N}, ::Vararg{Base.Slice,N}) where {T,N} = A
 function resize_buffer!(A::AbstractArray{T,N}, inds::Vararg{Any,N}) where {T,N}
     @boundscheck checkbounds(A, inds...)
     nsz = to_dims(inds)
+
     nlen = prod(nsz)
     copyto!(parent(A), A[inds...])
     resize_parent!(A, nlen)
@@ -237,7 +238,7 @@ end
 Base.resize!(A::AbstractArray, ::Integer, ::Colon) = A
 
 """
-    resize_buffer_dim!(A::AbstractArray, d::Int, I) 
+    resize_buffer_dim!(A::AbstractArray, d::Int, I)
 
 Implementation of `resize!(A, d, I)` where `parent(A)` is a [`BufferType`](@ref).
 """

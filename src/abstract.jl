@@ -17,8 +17,8 @@ abstract type AbstractRNArray{T,N} <: AbstractArray{T,N} end
 const ResizableArray{T,N} = Union{AbstractRDArray{T,N},AbstractRNArray{T,N}}
 
 Base.size(A::ResizableArray{T,N}) where {T,N} = convert(Dims{N}, getsize(A))
-Base.size(A::ResizableArray, d::Integer) = d < 1 ? throw(BoundsError()) :
-                                           d > ndims(A) ? 1 : @inbounds getsize(A, d)
+Base.size(A::ResizableArray, d::Integer) =
+    d < 1 ? throw(BoundsError()) : d > ndims(A) ? 1 : @inbounds getsize(A, d)
 # DenseArray only
 Base.unsafe_convert(::Type{Ptr{T}}, A::AbstractRDArray{T}) where {T} =
     Base.unsafe_convert(Ptr{T}, parent(A))

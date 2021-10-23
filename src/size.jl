@@ -5,7 +5,7 @@ Supertype for all array sizes.
 """
 abstract type AbstractSize{N} end
 
-const SizeType{N} = Union{AbstractSize{N}, Dims{N}}
+const SizeType{N} = Union{AbstractSize{N},Dims{N}}
 
 """
     Size{N} <: AbstractSize{N}

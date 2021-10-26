@@ -153,3 +153,11 @@ end
     @test resize!(tM, (2, 1:2)) == reshape(1:4, 2, 2)
     @test resize!(tM, (1:2, 1)) == reshape(1:2, 2, 1)
 end
+
+@testset "resize!(::Vector, ::Any)" begin
+    @test resize!(collect(1:4), (3,)) == 1:3
+    @test resize!(collect(1:4), (5,))[1:4] == 1:4
+    @test resize!(collect(1:4), (:,)) == 1:4
+    @test resize!(collect(1:4), (1:3,)) == 1:3
+    @test resize!(collect(1:4), (Bool[1, 0, 1, 1],)) == [1, 3, 4]
+end

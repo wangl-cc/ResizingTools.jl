@@ -11,18 +11,13 @@ const BufferType = Union{Vector,BitVector}
     isresizable(A::AbstractArray)
 
 Check if the type of `A` is resizable.
-
-!!! info
-
-    `isresizable(A)` for a `Vector` or a `BitVector` will return `false` even
-    which can be resized by `resize!(A, n)`.
 """
 isresizable(A::AbstractArray) = isresizable(typeof(A))
 isresizable(::Type{T}) where {T} = _isresizable(has_parent(T), parent_type(T))
 _isresizable(::True, ::Type{T}) where {T} = isresizable(T)
-_isresizable(::True, ::Type{<:Vector}) = true
-_isresizable(::True, ::Type{<:BitVector}) = true
+_isresizable(::True, ::Type{<:BufferType}) = true
 _isresizable(::False, ::Type) = false
+_isresizable(::False, ::Type{<:BufferType}) = true # BufferType is resizable now
 
 """
     to_parentinds(A::AbstractArray, Is::Tuple) -> Is′

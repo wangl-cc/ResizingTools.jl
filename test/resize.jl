@@ -71,19 +71,19 @@ function test_resize(f, g, A::AbstractArray{T,N}, itrs, dnums=1:N; pre=identity)
         @test size(tA, d) == _to_len(fA, d, I)
     end
 end
-test_resize(g, A::AbstractArray{T,N}, dims, itrs, dnums=1:N; pre=identity) where {T,N} =
-    test_resize(identity, g, A, dims, itrs, dnums)
+test_resize(g, A::AbstractArray{T,N}, itrs, dnums=1:N; pre=identity) where {T,N} =
+    test_resize(identity, g, A, itrs, dnums; pre=pre)
 
 @testset "resize!: $f" for f in (SimpleRDArray, warpsimplerdarray)
     for A in (V, M, T)
-        test_resize(f, A, DIMS, ITRS)
+        test_resize(f, A, ITRS)
     end
 end
 
 adjIS(I) = length(I) == 1 ? (1, I[1]) : I
 @testset "resize!: adjoint" begin
-    test_resize(adjoint, SimpleRDArray, V, DIMS, ITRS, 2; pre=adjIS)
-    test_resize(adjoint, SimpleRDArray, M, DIMS, ITRS)
+    test_resize(adjoint, SimpleRDArray, V, ITRS, 2; pre=adjIS)
+    test_resize(adjoint, SimpleRDArray, M, ITRS)
 end
 
 @testset "sizehint!: $f" for f in (SimpleRDArray, warpsimplerdarray)

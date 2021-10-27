@@ -25,7 +25,7 @@ _params(T::DataType) = T.parameters
             end
             @test length(ambiguities) == 0
         end
-        Aqua.test_all(ResizingTools; ambiguities=false)
+        Aqua.test_all(ResizingTools; ambiguities=false, deps_compat=false)
     end
 
     @testset "arraymath" begin

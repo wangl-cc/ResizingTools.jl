@@ -35,6 +35,7 @@ _totuple(tp::Tuple) = tp
 Set `sz` to `nsz`.
 
 # Example
+
 ```jldoctest
 julia> sz = Size(1, 2, 3)
 Size{3}((1, 2, 3))
@@ -122,7 +123,7 @@ setsize!(::Type{S}, A::AbstractArray{T,N}, d::Int, n::Int) where {T,N,S<:Size{N}
 Convert the given indices to `Dims`.
 
 !!! note
-
+    
     The given indices should be a return value of `to_indices`.
     If `inds[i]` is an `Integer`, this function would converted it to `Int`;
     If `inds[i]` is an `AbstractVector`, this function would return its length.

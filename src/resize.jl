@@ -111,11 +111,7 @@ after_resize!
 
 Resize `A` to `sz`. `sz` can be a tuple of integer or Colon or iterator.
 """
-function Base.resize!(
-    A::AbstractArray{T,N},
-    dims::NTuple{N,Any},
-    ::B = False(),
-) where {T,N,B}
+function Base.resize!(A::AbstractArray{T,N}, dims::NTuple{N,Any}, ::B=False()) where {T,N,B}
     dims′ = _to_indices(A, dims, B())
     if isresizable(A)
         pre_resize!(A, dims′)
@@ -288,7 +284,7 @@ function resize_buffer_dim!(A::AbstractArray, d::Int, n::Int)
     batch_len = blk_len * blk_num
     sbatch_len = blk_len * min(n, blk_num)
     δ = 0
-    for j = 1:batch_num
+    for j in 1:batch_num
         soffs = batch_len * (j - 1) + 1
         doffs = soffs + δ
         copyto!(cpy, doffs, parent(A), soffs, sbatch_len)
@@ -308,7 +304,7 @@ function resize_buffer_dim!(A::AbstractArray, d::Int, I::Base.LogicalIndex)
     cpy = similar(A, nlen)
     batch_len = blk_len * blk_num
     δ = 0
-    for j = 1:batch_num
+    for j in 1:batch_num
         for (k, flag) in enumerate(I′)
             if flag
                 soffs = batch_len * (j - 1) + blk_len * (k - 1) + 1
@@ -334,7 +330,7 @@ function resize_buffer_dim!(A::AbstractArray, d::Int, I::AbstractVector)
     cpy = similar(A, nlen)
     batch_len = blk_len * blk_num
     δ = 0
-    for j = 1:batch_num
+    for j in 1:batch_num
         for (k, flag) in enumerate(I′)
             if flag
                 soffs = batch_len * (j - 1) + blk_len * (k - 1) + 1
@@ -377,11 +373,11 @@ function _blkinfo(A::AbstractArray, i::Integer)
     i <= ndims(A) || throw(ArgumentError("dim must less than ndims(A)"))
     blk_len = 1
     sz = size(A)
-    @inbounds for j = 1:(i-1)
+    @inbounds for j in 1:(i-1)
         blk_len *= sz[j]
     end
     batch_num = 1
-    @inbounds for j = (i+1):ndims(A)
+    @inbounds for j in (i+1):ndims(A)
         batch_num *= sz[j]
     end
     return blk_len, @inbounds(sz[i]), batch_num

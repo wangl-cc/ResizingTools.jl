@@ -31,8 +31,7 @@ ResizingTools.getsize(A::WarpedArray, d::Int) = ResizingTools.getsize(parent(A),
 
 _geninds(A::AbstractArray, d::Integer, I) =
     ntuple(i -> i == d ? _to_inds(A, d, I) : axes(A, i), Val(ndims(A)))
-_geninds(A::AbstractArray, Is::Tuple) =
-    ntuple(i -> _to_inds(A, i, Is[i]) , Val(ndims(A)))
+_geninds(A::AbstractArray, Is::Tuple) = ntuple(i -> _to_inds(A, i, Is[i]), Val(ndims(A)))
 
 _to_inds(::AbstractArray, d::Integer, itr) = Base.to_index(itr)
 _to_inds(A::AbstractArray, d::Integer, ::Colon) = axes(A, d)
@@ -53,7 +52,7 @@ Base.IndexStyle(::Type{<:NLoop}) = IndexCartesian()
 Base.size(A::NLoop{N}) where {N} = ntuple(_ -> length(A.itr), Val(N))
 Base.getindex(A::NLoop{N}, is::Vararg{Int,N}) where {N} = ntuple(i -> A.itr[is[i]], Val(N))
 
-function test_resize(f, g, A::AbstractArray{T,N}, dims, itrs, dnums=1:N; pre=identity) where {T,N}
+function test_resize(f, g, A::AbstractArray{T,N}, itrs, dnums=1:N; pre=identity) where {T,N}
     @testset "resize!($(typeof(A)), $_Is)" for _Is in NLoop{N}(itrs)
         Is = pre(_Is)
         tA = g(f(A))
@@ -74,7 +73,6 @@ function test_resize(f, g, A::AbstractArray{T,N}, dims, itrs, dnums=1:N; pre=ide
 end
 test_resize(g, A::AbstractArray{T,N}, dims, itrs, dnums=1:N; pre=identity) where {T,N} =
     test_resize(identity, g, A, dims, itrs, dnums)
-
 
 @testset "resize!: $f" for f in (SimpleRDArray, warpsimplerdarray)
     for A in (V, M, T)

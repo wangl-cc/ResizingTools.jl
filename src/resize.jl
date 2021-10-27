@@ -90,20 +90,16 @@ end
     pre_resize!(A::AbstractArray{T,N}, sz::NTuple{N,Any})
     pre_resize!(A::AbstractArray{T,N}, d::Integer, n::Any)
 
-Do something before resize with given arguments.
+Do something before resize `A` with given arguments (do nothing by default).
 This method is called by `resize!` with the same arguments.
-The default implementation of `pre_resize!(A, d, n)` is
-`pre_resize!(A, setindex(A, n, d))`.
 """
 pre_resize!
 """
     after_resize!(A::AbstractArray{T,N}, sz::NTuple{N,Any})
     after_resize!(A::AbstractArray{T,N}, d::Integer, n::Any)
 
-Do something after resize with given arguments.
+Do something after resize `A` with given arguments (do nothing by default).
 This methods is called by `resize!` with the same arguments.
-The default implementation of `after_resize!(A, d, n)` is
-`after_resize!(A, setindex(A, n, d))`.
 """
 after_resize!
 
@@ -246,9 +242,8 @@ _to_sind(ind, n::Integer) = n >= length(ind) ? UnitRange(ind) : UnitRange(ind[1:
 _to_sind(ind, I) = I
 _to_oneto(I) = Base.OneTo(length(I))
 
-@inline pre_resize!(A::AbstractArray, d::Int, n::Any) = pre_resize!(A, setindex(A, n, d))
-@inline after_resize!(A::AbstractArray, d::Int, n::Any) =
-    after_resize!(A, setindex(A, n, d))
+@inline pre_resize!(A::AbstractArray, ::Int, ::Any) = A
+@inline after_resize!(A::AbstractArray, ::Int, ::Any) = A
 
 """
     resize!(A::AbstractArray{T,N}, d::Integer, I)
@@ -257,7 +252,7 @@ Resize the `d`th dimension to `I`, where `I` can be an integer or a colon or an 
 """
 function Base.resize!(A::AbstractArray, d::Integer, I)
     if isresizable(A)
-        pre_resize!(A, d′, Iʹ)
+        pre_resize!(A, d, I)
         if parent_type(A) <: BufferType
             return resize_buffer_dim!(A, Int(d), Base.to_index(I))
         else
@@ -266,7 +261,7 @@ function Base.resize!(A::AbstractArray, d::Integer, I)
             setsize!(A, d′, Iʹ)
             return A
         end
-        after_resize!(A, d′, Iʹ)
+        after_resize!(A, d, I)
     end
     return throw_methoderror(resize!, A)
 end
@@ -398,8 +393,6 @@ checksize(A, sz::Dims) = checksize(Bool, A, sz) || error("dimension(s) must be >
 # checkbounds at dim d
 check_dimbounds(A::AbstractArray, d::Integer, I) =
     checkindex(Bool, axes(A, d), I) || throw_dimboundserror(A, d, I)
-
-@inline setindex(A::Tuple, v, i::Int) = ntuple(j -> ifelse(j == i, v, A[j]), Val(length(A)))
 
 # Exceptions
 struct MethodUndefineError <: Exception

@@ -46,8 +46,7 @@ This can improve performance.
 """
 Base.sizehint!(A::AbstractArray{T,N}, sz::NTuple{N,Any}) where {T,N} =
     sizehint!(A, to_dims(sz))
-Base.sizehint!(A::AbstractArray{T,N}, sz::Dims{N}) where {T,N} =
-    sizehint!(A, prod(sz))
+Base.sizehint!(A::AbstractArray{T,N}, sz::Dims{N}) where {T,N} = sizehint!(A, prod(sz))
 
 """
     Base.sizehint!(A::AbstractArray, nl::Integer)
@@ -116,7 +115,11 @@ after_resize!
 
 Resize `A` to `sz`. `sz` can be a tuple of integer or Colon or iterator.
 """
-function Base.resize!(A::AbstractArray{T,N}, dims::NTuple{N,Any}, ::B=False()) where {T,N,B}
+function Base.resize!(
+    A::AbstractArray{T,N},
+    dims::NTuple{N,Any},
+    ::B = False(),
+) where {T,N,B}
     dims′ = _to_indices(A, dims, B())
     if isresizable(A)
         pre_resize!(A, dims′)
@@ -244,7 +247,8 @@ _to_sind(ind, I) = I
 _to_oneto(I) = Base.OneTo(length(I))
 
 @inline pre_resize!(A::AbstractArray, d::Int, n::Any) = pre_resize!(A, setindex(A, n, d))
-@inline after_resize!(A::AbstractArray, d::Int, n::Any) = after_resize!(A, setindex(A, n, d))
+@inline after_resize!(A::AbstractArray, d::Int, n::Any) =
+    after_resize!(A, setindex(A, n, d))
 
 """
     resize!(A::AbstractArray{T,N}, d::Integer, I)
@@ -289,7 +293,7 @@ function resize_buffer_dim!(A::AbstractArray, d::Int, n::Int)
     batch_len = blk_len * blk_num
     sbatch_len = blk_len * min(n, blk_num)
     δ = 0
-    for j in 1:batch_num
+    for j = 1:batch_num
         soffs = batch_len * (j - 1) + 1
         doffs = soffs + δ
         copyto!(cpy, doffs, parent(A), soffs, sbatch_len)
@@ -309,7 +313,7 @@ function resize_buffer_dim!(A::AbstractArray, d::Int, I::Base.LogicalIndex)
     cpy = similar(A, nlen)
     batch_len = blk_len * blk_num
     δ = 0
-    for j in 1:batch_num
+    for j = 1:batch_num
         for (k, flag) in enumerate(I′)
             if flag
                 soffs = batch_len * (j - 1) + blk_len * (k - 1) + 1
@@ -335,7 +339,7 @@ function resize_buffer_dim!(A::AbstractArray, d::Int, I::AbstractVector)
     cpy = similar(A, nlen)
     batch_len = blk_len * blk_num
     δ = 0
-    for j in 1:batch_num
+    for j = 1:batch_num
         for (k, flag) in enumerate(I′)
             if flag
                 soffs = batch_len * (j - 1) + blk_len * (k - 1) + 1
@@ -378,11 +382,11 @@ function _blkinfo(A::AbstractArray, i::Integer)
     i <= ndims(A) || throw(ArgumentError("dim must less than ndims(A)"))
     blk_len = 1
     sz = size(A)
-    @inbounds for j in 1:(i-1)
+    @inbounds for j = 1:(i-1)
         blk_len *= sz[j]
     end
     batch_num = 1
-    @inbounds for j in (i+1):ndims(A)
+    @inbounds for j = (i+1):ndims(A)
         batch_num *= sz[j]
     end
     return blk_len, @inbounds(sz[i]), batch_num
@@ -415,8 +419,7 @@ struct DimBoundsError <: Exception
 end
 function Base.showerror(io::IO, err::DimBoundsError)
     print(io, "DimBoundsError: attempt to access ")
-    summary(io, err.A),
-    print(io, " at dimension ", err.d, " with index ")
+    summary(io, err.A), print(io, " at dimension ", err.d, " with index ")
     if err.I isa Base.LogicalIndex
         print(io, err.I.mask)
     else

@@ -116,8 +116,6 @@ Base.@propagate_inbounds setsize!(A::AbstractArray, d::Integer, n) =
 setsize!(::Type{S}, A::AbstractArray{T,N}, d::Int, n::Int) where {T,N,S<:Size{N}} =
     (Base.@_propagate_inbounds_meta; getsize(A)[d] = n; A) # meta to avoid too long line
 
-@inline setindex(A::Tuple, v, i::Int) = ntuple(j -> ifelse(j == i, v, A[j]), Val(length(A)))
-
 """
     to_dims(inds::Tuple) -> Dims
 

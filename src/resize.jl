@@ -46,6 +46,17 @@ to_parentinds(A::AdjOrTransAbsVec, (i, J)::Tuple) = (check_dimbounds(A, 1, i); (
 to_parentinds(::AdjOrTransAbsMat, (I, J)::Tuple) = (J, I)
 to_parentinds(::AdjOrTrans, d::Integer, I) = ifelse(d == 1, 2, 1), I
 
+"""
+    copyto_view!(dst::AbstractArray, src::AbstractArray, dinds...)
+
+copy the elements of `src` to `dst` at the indices `dinds`.
+Similar to `copyto!(view(dst, dinds...), src)`.
+This method is called by `resize_buffer!` to copy elements of the parent.
+Override this method to implement custom copyto parent.
+"""
+copyto_view!(dst::AbstractArray, src::AbstractArray, dinds...) =
+    copyto!(view(dst, dinds...), src)
+
 # Base.sizehint!(A, sz)
 """
     sizehint!(A::AbstractArray{T,N}, sz::NTuple{N}) where {T,N}
@@ -170,10 +181,8 @@ function _resize_buffer!(A::AbstractArray{T,N}, nsz::Vararg{Int,N}) where {T,N}
     # step 2: resize A for enough capacity
     resize_parent!(A, nsz)
     setsize!(A, nsz)
-    # step 3: get dst region of A
-    dst = view(A, map(Base.OneTo, ssz)...)
-    # step 4: copy elements
-    copyto!(dst, src) # this copy is not fastest
+    # step 3: copy src to dst region of A
+    copyto_view!(A, src, map(Base.OneTo, ssz)...)
     return A
 end
 # resize with Colon
@@ -239,7 +248,7 @@ function _resize_buffer!(A::AbstractArray{T,N}, inds::Vararg{Any,N}) where {T,N}
     resize_parent!(A, nlen)
     setsize!(A, sz)
     dinds = map(_to_oneto, sinds)
-    copyto!(view(A, dinds...), src)
+    copyto_view!(A, src, dinds...)
     return A
 end
 

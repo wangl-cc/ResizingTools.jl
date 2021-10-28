@@ -141,16 +141,16 @@ end
 
 Implementation of `resize!(A, nsz)` where `parent(A)` is [`BufferType`](@ref).
 """
-resize_buffer!
+resize_buffer!(A::AbstractArray, nsz...) = _resize_buffer!(A, nsz...)
 # resize vector will not move any element
-function resize_buffer!(A::AbstractVector{T}, n::Int) where {T}
+function _resize_buffer!(A::AbstractVector{T}, n::Int) where {T}
     checksize(A, (n,))
     resize_parent!(A, n) # resize! buffer by Base.resize!
     setsize!(A, 1, n)
     return A
 end
 # resize array with Int sz
-function resize_buffer!(A::AbstractArray{T,N}, nsz::Vararg{Int,N}) where {T,N}
+function _resize_buffer!(A::AbstractArray{T,N}, nsz::Vararg{Int,N}) where {T,N}
     checksize(A, nsz)
     sz = size(A)
     nsz == sz && return A # if sz not change
@@ -177,7 +177,7 @@ function resize_buffer!(A::AbstractArray{T,N}, nsz::Vararg{Int,N}) where {T,N}
     return A
 end
 # resize with Colon
-function resize_buffer!(A::AbstractArray{T,N}, dims::Vararg{Dim,N}) where {T,N}
+function _resize_buffer!(A::AbstractArray{T,N}, dims::Vararg{Dim,N}) where {T,N}
     M = restdim(Base.Slice, dims...)
     # if only last dim changed
     if M == 1
@@ -229,9 +229,9 @@ function resize_buffer!(A::AbstractArray{T,N}, dims::Vararg{Dim,N}) where {T,N}
     end
     return A
 end
-resize_buffer!(A::AbstractArray{T,N}, ::Vararg{Base.Slice,N}) where {T,N} = A
-# _resize! with inds
-function resize_buffer!(A::AbstractArray{T,N}, inds::Vararg{Any,N}) where {T,N}
+_resize_buffer!(A::AbstractArray{T,N}, ::Vararg{Base.Slice,N}) where {T,N} = A
+# resize with inds
+function _resize_buffer!(A::AbstractArray{T,N}, inds::Vararg{Any,N}) where {T,N}
     sz = to_dims(inds)
     nlen = prod(sz)
     sinds = map(_to_sind, axes(A), inds)
@@ -277,9 +277,9 @@ Base.resize!(A::AbstractArray, ::Integer, ::Colon) = A
 
 Implementation of `resize!(A, d, I)` where `parent(A)` is a [`BufferType`](@ref).
 """
-resize_buffer_dim!
+resize_buffer_dim!(A::AbstractArray, d::Int, I) = _resize_buffer_dim!(A, d, I)
 
-function resize_buffer_dim!(A::AbstractArray, d::Int, n::Int)
+function _resize_buffer_dim!(A::AbstractArray, d::Int, n::Int)
     N = ndims(A)
     n == size(A, d) && return A
     if d == N
@@ -304,7 +304,7 @@ function resize_buffer_dim!(A::AbstractArray, d::Int, n::Int)
     copyto!(parent(A), cpy)
     return A
 end
-function resize_buffer_dim!(A::AbstractArray, d::Int, I::Base.LogicalIndex)
+function _resize_buffer_dim!(A::AbstractArray, d::Int, I::Base.LogicalIndex)
     @boundscheck check_dimbounds(A, d, I)
     I′ = I.mask
     n = I.sum
@@ -329,7 +329,7 @@ function resize_buffer_dim!(A::AbstractArray, d::Int, I::Base.LogicalIndex)
     copyto!(parent(A), cpy)
     return A
 end
-function resize_buffer_dim!(A::AbstractArray, d::Int, I::AbstractVector)
+function _resize_buffer_dim!(A::AbstractArray, d::Int, I::AbstractVector)
     @boundscheck check_dimbounds(A, d, I)
     I′ = zeros(Bool, size(A, d))
     I′[I] .= true

@@ -239,7 +239,7 @@ function _resize_buffer!(A::AbstractArray{T,N}, inds::Vararg{Any,N}) where {T,N}
     resize_parent!(A, nlen)
     setsize!(A, sz)
     dinds = map(_to_oneto, sinds)
-    A[dinds...] = src
+    copyto!(view(A, dinds...), src)
     return A
 end
 

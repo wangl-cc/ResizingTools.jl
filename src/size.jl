@@ -75,11 +75,13 @@ end
 
 Returns the dimensions of `A` unlike `size` which may not return a
 `Dims{N}`.
+
+!!! warning
+    You should never call this function directly. Use `size` instead.
 """
 getsize
 
-@inline getsize(A::AbstractArray) = size(A) # return `size(A)` by default
-@inline getsize(A::AbstractArray, d::Integer) = getsize(A, Int(d))
+Base.@propagate_inbounds getsize(A::AbstractArray, d::Integer) = getsize(A, Int(d))
 Base.@propagate_inbounds getsize(A::AbstractArray, d::Int) = getsize(A)[d]
 
 """
@@ -123,7 +125,7 @@ setsize!(::Type{S}, A::AbstractArray{T,N}, d::Int, n::Int) where {T,N,S<:Size{N}
 Convert the given indices to `Dims`.
 
 !!! note
-    
+
     The given indices should be a return value of `to_indices`.
     If `inds[i]` is an `Integer`, this function would converted it to `Int`;
     If `inds[i]` is an `AbstractVector`, this function would return its length.

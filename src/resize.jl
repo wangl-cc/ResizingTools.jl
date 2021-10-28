@@ -10,7 +10,7 @@ const BufferType = Union{Vector,BitVector}
 """
     isresizable(A::AbstractArray)
 
-Check if the type of `A` is resizable.
+Determines if an array is resizable, if not `resize!(A, args...)` would throw an error.
 """
 isresizable(A::AbstractArray) = isresizable(typeof(A))
 isresizable(::Type{T}) where {T} = _isresizable(has_parent(T), parent_type(T))
@@ -18,6 +18,15 @@ _isresizable(::True, ::Type{T}) where {T} = isresizable(T)
 _isresizable(::True, ::Type{<:BufferType}) = true
 _isresizable(::False, ::Type) = false
 _isresizable(::False, ::Type{<:BufferType}) = true # BufferType is resizable now
+
+"""
+    has_resize_buffer(A::AbstractArray)
+
+Determines if an array has `resize_buffer*` methods,
+if not `resize!(A, args...)` would resize its parent.
+"""
+has_resize_buffer(A::AbstractArray) = has_resize_buffer(typeof(A))
+has_resize_buffer(::Type{T}) where {T} = parent_type(T) <: BufferType
 
 """
     to_parentinds(A::AbstractArray, Is::Tuple) -> Is′
@@ -115,7 +124,7 @@ function Base.resize!(A::AbstractArray{T,N}, dims::NTuple{N,Any}, ::B=False()) w
     if isresizable(A)
         dims′ = _to_indices(A, dims, B())
         pre_resize!(A, dims′)
-        if parent_type(A) <: BufferType
+        if has_resize_buffer(A)
             resize_buffer!(A, to_indices(A, dims′)...)
         else
             resize!(parent(A), to_parentinds(A, dims′), True())
@@ -249,7 +258,7 @@ Resize the `d`th dimension to `I`, where `I` can be an integer or a colon or an 
 function Base.resize!(A::AbstractArray, d::Integer, I)
     if isresizable(A)
         pre_resize!(A, d, I)
-        if parent_type(A) <: BufferType
+        if has_resize_buffer(A)
             resize_buffer_dim!(A, Int(d), Base.to_index(I))
         else
             d′, Iʹ = to_parentinds(A, d, Base.to_index(I))

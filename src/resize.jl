@@ -35,7 +35,7 @@ to_parentinds(::AbstractArray, d::Integer, I) = Int(d), I
 # impl of adjoint and transpose
 to_parentinds(A::AdjOrTransAbsVec, (i, J)::Tuple) = (check_dimbounds(A, 1, i); (J,))
 to_parentinds(::AdjOrTransAbsMat, (I, J)::Tuple) = (J, I)
-to_parentinds(::AdjOrTrans, i::Integer, I) = ifelse(i == 1, 2, 1), I
+to_parentinds(::AdjOrTrans, d::Integer, I) = ifelse(d == 1, 2, 1), I
 
 # Base.sizehint!(A, sz)
 """
@@ -59,7 +59,7 @@ function Base.sizehint!(A::AbstractArray, nl::Integer)
         sizehint!(parent(A), nl)
         return A
     end
-    return throw_methoderror(sizehint!, A)
+    throw_methoderror(sizehint!, A)
 end
 
 """
@@ -83,7 +83,7 @@ function resize_parent!(A::AbstractArray, nl::Int)
     if parent_type(A) <: BufferType
         return resize!(parent(A), nl)
     end
-    return error("parent_type(A) must be BufferType")
+    error("parent_type(A) must be BufferType")
 end
 
 """
@@ -112,19 +112,19 @@ after_resize!
 Resize `A` to `sz`. `sz` can be a tuple of integer or Colon or iterator.
 """
 function Base.resize!(A::AbstractArray{T,N}, dims::NTuple{N,Any}, ::B=False()) where {T,N,B}
-    dims′ = _to_indices(A, dims, B())
     if isresizable(A)
+        dims′ = _to_indices(A, dims, B())
         pre_resize!(A, dims′)
         if parent_type(A) <: BufferType
-            return resize_buffer!(A, to_indices(A, dims′)...)
+            resize_buffer!(A, to_indices(A, dims′)...)
         else
             resize!(parent(A), to_parentinds(A, dims′), True())
             setsize!(A, dims′)
-            return A
         end
         after_resize!(A, dims′)
+        return A
     end
-    return throw_methoderror(resize!, A)
+    throw_methoderror(resize!, A)
 end
 
 """
@@ -250,16 +250,16 @@ function Base.resize!(A::AbstractArray, d::Integer, I)
     if isresizable(A)
         pre_resize!(A, d, I)
         if parent_type(A) <: BufferType
-            return resize_buffer_dim!(A, Int(d), Base.to_index(I))
+            resize_buffer_dim!(A, Int(d), Base.to_index(I))
         else
             d′, Iʹ = to_parentinds(A, d, Base.to_index(I))
             resize!(parent(A), d′, Iʹ)
             setsize!(A, d′, Iʹ)
-            return A
         end
         after_resize!(A, d, I)
+        return A
     end
-    return throw_methoderror(resize!, A)
+    throw_methoderror(resize!, A)
 end
 Base.resize!(A::AbstractArray, ::Integer, ::Colon) = A
 

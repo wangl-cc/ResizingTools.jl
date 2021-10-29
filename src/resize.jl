@@ -40,7 +40,7 @@ to_parentinds(::AbstractArray, Is::Tuple) = Is
 Convert the index(s) `I` at `d`th dimension of `A` to index(s) `I′` at `d′`th
 dimension of `parent(A)`.
 """
-to_parentinds(::AbstractArray, d::Integer, I) = Int(d), I
+to_parentinds(::AbstractArray, d::Integer, I) = d, I
 # impl of adjoint and transpose
 to_parentinds(A::AdjOrTransAbsVec, (i, J)::Tuple) = (check_dimbounds(A, 1, i); (J,))
 to_parentinds(::AdjOrTransAbsMat, (I, J)::Tuple) = (J, I)
@@ -268,15 +268,16 @@ Resize the `d`th dimension to `I`, where `I` can be an integer or a colon or an 
 """
 function Base.resize!(A::AbstractArray, d::Integer, I)
     if isresizable(A)
-        pre_resize!(A, d, I)
+        d′ = Int(d)
+        I′ = Base.to_index(I)
+        pre_resize!(A, d′, I′)
         if has_resize_buffer(A)
-            resize_buffer_dim!(A, Int(d), Base.to_index(I))
+            resize_buffer_dim!(A, d′, I′)
         else
-            d′, Iʹ = to_parentinds(A, d, Base.to_index(I))
-            resize!(parent(A), d′, Iʹ)
-            setsize!(A, d′, Iʹ)
+            resize!(parent(A), to_parentinds(A, d′, I′)...)
+            setsize!(A, d′, I′)
         end
-        after_resize!(A, d, I)
+        after_resize!(A, d′, I′)
         return A
     end
     throw_methoderror(resize!, A)

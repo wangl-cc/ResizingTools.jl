@@ -222,7 +222,7 @@ function _resize_buffer!(A::AbstractArray{T,N}, dims::Vararg{Dim,N}) where {T,N}
         end
     end
     resize_parent!(A, nlen)
-    setsize!(A, nsz)
+    setsize!(A, dims)
     if ssz_tail == nsz_tail
         copyto!(parent(A), cpy)
     else
@@ -248,7 +248,7 @@ function _resize_buffer!(A::AbstractArray{T,N}, inds::Vararg{Any,N}) where {T,N}
     sinds = map(_to_sind, axes(A), inds)
     src = A[sinds...]
     resize_parent!(A, nlen)
-    setsize!(A, sz)
+    setsize!(A, inds)
     dinds = map(_to_oneto, sinds)
     copyto_parent!(A, src, dinds...)
     return A
@@ -319,7 +319,7 @@ end
 function _resize_buffer_dim!(A::AbstractArray, d::Int, I::Base.LogicalIndex)
     @boundscheck check_dimbounds(A, d, I)
     I′ = I.mask
-    n = I.sum
+    n = length(I)
     blk_len, blk_num, batch_num = _blkinfo(A, d)
     nlen = blk_len * n * batch_num
     cpy = similar(A, nlen)
@@ -337,7 +337,7 @@ function _resize_buffer_dim!(A::AbstractArray, d::Int, I::Base.LogicalIndex)
         end
     end
     resize_parent!(A, nlen)
-    setsize!(A, d, n)
+    setsize!(A, d, I)
     copyto!(parent(A), cpy)
     return A
 end
@@ -363,7 +363,7 @@ function _resize_buffer_dim!(A::AbstractArray, d::Int, I::AbstractVector)
         end
     end
     resize_parent!(A, nlen)
-    setsize!(A, d, n)
+    setsize!(A, d, I)
     copyto!(parent(A), cpy)
     return A
 end

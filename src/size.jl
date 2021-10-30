@@ -62,11 +62,12 @@ end
 
 function Base.setindex!(sz::Size{N}, v, i::Int) where {N}
     @boundscheck 1 <= i <= N || throw(BoundsError(sz, i))
-    return GC.@preserve sz unsafe_store!(
+    GC.@preserve sz unsafe_store!(
         Base.unsafe_convert(Ptr{Int}, pointer_from_objref(sz)),
         convert(Int, v),
         i,
     )
+    return sz
 end
 
 # getsize

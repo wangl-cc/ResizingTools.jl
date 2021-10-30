@@ -33,4 +33,5 @@ end
     @test length(sz) == 4
     set!(sz, tp)
     @test sz == tp
+    @test setindex!(sz, 0, 1) == (0, 2, 3, 4)
 end

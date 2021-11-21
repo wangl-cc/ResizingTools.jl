@@ -23,7 +23,14 @@ _params(T::DataType) = T.parameters
                 end
                 return true
             end
-            @test length(ambiguities) == 0
+            if !isempty(ambiguities)
+                for (i, amb) in enumerate(ambiguities)
+                    println("Ambiguity #$i:")
+                    println("  ", amb[1])
+                    println("  ", amb[2])
+                end
+            end
+            @test isempty(ambiguities)
         end
         Aqua.test_all(ResizingTools; ambiguities=false, deps_compat=false)
     end

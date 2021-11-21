@@ -2,6 +2,7 @@ using Test
 using ArrayInterface
 using ResizingTools
 using ResizingTools: MethodUndefineError, DimBoundsError, tailn
+using Static
 using Aqua
 
 const V = rand(3)

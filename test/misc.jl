@@ -5,6 +5,30 @@
     @test size(tV, 0x2) == 1
 end
 
+@testset "ArrayInterface.strides" begin
+    tV = SimpleRDArray(V)
+    @test ArrayInterface.strides(tV) == (StaticInt(1),)
+    @test ArrayInterface.strides(tV, 1) == 1
+    @test ArrayInterface.stride(tV, StaticInt(1)) isa StaticInt
+    @test ArrayInterface.stride(tV, 1) == 1
+    tM = SimpleRDArray(M)
+    @test strides(tM) == (StaticInt(1), 3)
+    @test ArrayInterface.strides(tM, 1) == 1
+    @test ArrayInterface.strides(tM, 2) == 3
+    @test ArrayInterface.stride(tM, StaticInt(1)) isa StaticInt
+    @test ArrayInterface.stride(tM, 1) == 1
+    @test ArrayInterface.stride(tM, 2) == 3
+    tT = SimpleRDArray(T)
+    @test strides(tT) == (StaticInt(1), 3, 9)
+    @test ArrayInterface.strides(tT, 1) == 1
+    @test ArrayInterface.strides(tT, 2) == 3
+    @test ArrayInterface.strides(tT, 3) == 9
+    @test ArrayInterface.stride(tT, StaticInt(1)) isa StaticInt
+    @test ArrayInterface.stride(tT, 1) == 1
+    @test ArrayInterface.stride(tT, 2) == 3
+    @test ArrayInterface.stride(tT, 3) == 9
+end
+
 @testset "non-resizable arrays" begin
     @test_throws MethodUndefineError sizehint!(1:2, 3)
     @test_throws MethodUndefineError resize!(1:2, (3,))

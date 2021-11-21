@@ -23,3 +23,6 @@ Base.size(A::ResizableArray, d::Integer) =
 Base.unsafe_convert(::Type{Ptr{T}}, A::AbstractRDArray{T}) where {T} =
     Base.unsafe_convert(Ptr{T}, parent(A))
 Base.elsize(::Type{T}) where {T<:AbstractRDArray} = Base.elsize(parent_type(T))
+
+ArrayInterface.strides(A::AbstractRDArray) = (StaticInt(1), Base.tail(strides(A))...)
+ArrayInterface.strides(A::AbstractRDArray, dim::Integer) = stride(A, Int(dim))

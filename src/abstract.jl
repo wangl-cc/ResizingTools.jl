@@ -26,3 +26,10 @@ Base.elsize(::Type{T}) where {T<:AbstractRDArray} = Base.elsize(parent_type(T))
 
 ArrayInterface.strides(A::AbstractRDArray) = (StaticInt(1), Base.tail(strides(A))...)
 ArrayInterface.strides(A::AbstractRDArray, dim::Integer) = stride(A, Int(dim))
+
+ArrayInterface.stride_rank(::Type{T}) where {T<:AbstractRDArray} =
+    Static.nstatic(Val(ndims(T)))
+ArrayInterface.dense_dims(::Type{T}) where {T<:AbstractRDArray} =
+    ntuple(_ -> True(), Val(ndims(T)))
+ArrayInterface.axes_types(::Type{T}) where {T<:AbstractRDArray} =
+    NTuple{ndims(T), Base.OneTo{Int}}

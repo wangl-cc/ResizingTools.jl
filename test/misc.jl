@@ -59,3 +59,11 @@ end
     @test sz == tp
     @test setindex!(sz, 0, 1) == (0, 2, 3, 4)
 end
+
+@testset "@turbo" begin
+    tV = SimpleRDArray(V)
+    tM = SimpleRDArray(M)
+    @test @turbo(tV .* tV) ≈ (tV .* tV)
+    @test @turbo(tV .* tM) ≈ (tV .* tM)
+    @test @turbo(tM .* tM) ≈ (tM .* tM)
+end

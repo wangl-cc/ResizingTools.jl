@@ -2,6 +2,7 @@ using Test
 using ArrayInterface
 using ResizingTools
 using ResizingTools: MethodUndefineError, DimBoundsError, tailn
+using LoopVectorization
 using Static
 using Aqua
 

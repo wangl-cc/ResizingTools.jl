@@ -5,6 +5,8 @@ const ITRS = (
     1:2,
     1:3,
     [true, true, true],
+    not(1),
+    FI(iseven),
     [false, true, true],
     [true, false, true],
     [true, true, false],
@@ -33,7 +35,7 @@ _geninds(A::AbstractArray, d::Integer, I) =
     ntuple(i -> i == d ? _to_inds(A, d, I) : axes(A, i), Val(ndims(A)))
 _geninds(A::AbstractArray, Is::Tuple) = ntuple(i -> _to_inds(A, i, Is[i]), Val(ndims(A)))
 
-_to_inds(::AbstractArray, d::Integer, itr) = Base.to_index(itr)
+_to_inds(A::AbstractArray, d::Integer, itr) = ResizingTools.to_index(A, axes(A, d), itr)
 _to_inds(A::AbstractArray, d::Integer, ::Colon) = axes(A, d)
 _to_inds(A::AbstractArray, d::Integer, n::Integer) = Base.OneTo(min(n, size(A, d)))
 
@@ -41,6 +43,8 @@ _to_sinds(inds) = map(ind -> Base.OneTo(length(ind)), inds)
 
 _to_size(A::AbstractArray, Is::Tuple) = ntuple(i -> _to_len(A, i, Is[i]), Val(ndims(A)))
 _to_len(::AbstractArray, ::Integer, itr) = eltype(itr) <: Bool ? sum(itr) : length(itr)
+_to_len(A::AbstractArray, d::Integer, I::FunctionIndices.AbstractFunctionIndex) =
+    length(_to_inds(A, d, I))
 _to_len(::AbstractArray, ::Integer, n::Integer) = n
 _to_len(A::AbstractArray, d::Integer, ::Colon) = size(A, d)
 

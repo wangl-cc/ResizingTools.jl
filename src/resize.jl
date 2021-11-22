@@ -269,7 +269,7 @@ Resize the `d`th dimension to `I`, where `I` can be an integer or a colon or an 
 function Base.resize!(A::AbstractArray, d::Integer, I)
     if isresizable(A)
         d′ = Int(d)
-        I′ = Base.to_index(I)
+        I′ = to_index(A, axes(A, d′), I)
         pre_resize!(A, d′, I′)
         if has_resize_buffer(A)
             resize_buffer_dim!(A, d′, I′)
@@ -382,6 +382,10 @@ function tailn(::Val{N}, item, items...) where {N}
         return tailn(Val(N), items...)
     end
 end
+
+to_index(A, ind, I) = Base.to_index(A, I)
+to_index(A, ind, I::FunctionIndices.AbstractFunctionIndex) =
+    FunctionIndices.to_index(FunctionIndices.indextype(A, I), A, ind, I)
 
 _accumulate_rec(f, op, init, item) = (init, op(init, f(item)))
 _accumulate_rec(f, op, init, item, items...) =

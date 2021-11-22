@@ -3,6 +3,7 @@ using ArrayInterface
 using ResizingTools
 using ResizingTools: MethodUndefineError, DimBoundsError, tailn
 using LoopVectorization
+using FunctionIndices
 using Static
 using Aqua
 

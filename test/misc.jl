@@ -63,7 +63,7 @@ end
 @testset "@turbo" begin
     tV = SimpleRDArray(V)
     tM = SimpleRDArray(M)
-    @test @turbo(tV .* tV) ≈ (tV .* tV)
-    @test @turbo(tV .* tM) ≈ (tV .* tM)
-    @test @turbo(tM .* tM) ≈ (tM .* tM)
+    @test @avx(tV .* tV) ≈ (tV .* tV)
+    @test @avx(tV .* tM) ≈ (tV .* tM)
+    @test @avx(tM .* tM) ≈ (tM .* tM)
 end

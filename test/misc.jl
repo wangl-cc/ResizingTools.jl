@@ -60,10 +60,32 @@ end
     @test setindex!(sz, 0, 1) == (0, 2, 3, 4)
 end
 
+# test for LoopVectorization
 @testset "@turbo" begin
     tV = SimpleRDArray(V)
     tM = SimpleRDArray(M)
     @test @avx(tV .* tV) ≈ (tV .* tV)
     @test @avx(tV .* tM) ≈ (tV .* tM)
     @test @avx(tM .* tM) ≈ (tM .* tM)
+    @test @avx(V .* tV) ≈ (V .* tV)
+    @test @avx(tV .* V) ≈ (tV .* V)
+    @test @avx(V .* tM) ≈ (V .* tM)
+    @test @avx(tV .* M) ≈ (tV .* M)
+    @test @avx(M .* tM) ≈ (M .* tM)
+    @test @avx(tM .* M) ≈ (tM .* M)
+    function A_mul_B(A, B)
+        C = Array{Base.promote_op(*, eltype(A), eltype(B))}(undef, size(A, 1), size(B, 2))
+        @avx for n ∈ indices((C,B), 2), m ∈ indices((C,A), 1)
+            Cmn = zero(eltype(C))
+            for k ∈ indices((A,B), (2,1))
+                Cmn += A[m,k] * B[k,n]
+            end
+            C[m,n] = Cmn
+        end
+        return C
+    end
+    @test A_mul_B(M, M) ≈ M * M
+    @test A_mul_B(M, tM) ≈ M * tM
+    @test A_mul_B(tM, M) ≈ tM * M
+    @test A_mul_B(tM, tM) ≈ tM * tM
 end

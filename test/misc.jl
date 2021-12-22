@@ -73,11 +73,11 @@ end
     @test @avx(tV .* M) ≈ (tV .* M)
     @test @avx(M .* tM) ≈ (M .* tM)
     @test @avx(tM .* M) ≈ (tM .* M)
-    function A_mul_B(A, B)
+    function A_mul_B(A, B) # this function is just for test
         C = Array{Base.promote_op(*, eltype(A), eltype(B))}(undef, size(A, 1), size(B, 2))
-        @avx for n ∈ indices((C,B), 2), m ∈ indices((C,A), 1)
+        @avx for n ∈ axes(B, 2), m ∈ axes(A, 1)
             Cmn = zero(eltype(C))
-            for k ∈ indices((A,B), (2,1))
+            for k ∈ axes(B, 1)
                 Cmn += A[m,k] * B[k,n]
             end
             C[m,n] = Cmn
